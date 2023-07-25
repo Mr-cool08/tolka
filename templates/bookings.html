@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Available Jobs{% endblock %}
+    
+    {% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/bookings.css') }}">
+    <meta http-equiv="refresh" content="10">
+    {% endblock %}
+    {% block content %}
+<h1>Available Jobs</h1>
+
+{% if jobs %}
+    <ul class="job-list">
+        {% for job in jobs %}
+            <li class="job-item">
+                <div class="job-details">
+                    <span class="job-title">Name: {{ job[1] }}<br>Email: {{ job[2] }}<br>Phone: {{ job[3] }}<br>Language: {{ job[4] }}<br>Start time: {{ job[5] }} <br>End time:{{ job[6] }}</span>
+                    <div class="job-actions">
+                        <button class="job-accept-btn" onclick="acceptJob({{ job[0] }})">Accept</button>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p><center>No jobs available at the moment.</center></p>
+{% endif %}
+<script>
+function acceptJob(jobId) {
+    fetch(`/jobs/${jobId}`, { method: 'POST' })
+        .then(response => {
+            if (response.ok) {
+                alert('Job accepted and mail sent!');
+                location.reload();  // Refresh the page to update the job list
+            } else {
+                alert('Failed to accept the job. Please refresh the page.');
+            }
+        });
+}
+</script>
+{% endblock %}

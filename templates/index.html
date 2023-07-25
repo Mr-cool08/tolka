@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}
+    Translator Booking
+{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">
+{% endblock %}  
+
+{% block content %}
+    <h1>Translator Booking</h1>
+    <form action="/submit" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="phone">Phone:</label>
+        <input type="tel" id="phone" name="phone" required><br><br>
+        
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+        
+        <label for="language">Language:</label>
+        <select id="language" name="language" required>
+            <option value="" disabled selected hidden>Select a language</option>
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+        </select><br><br>
+
+        <label for="translation-type">Translation Type:</label>
+        <select id="translation-type" name="translation_type" required>
+            <option value="" disabled selected hidden>Select a translation type</option>
+            <option value="Online">Online</option>
+            <option value="Physical">Physical</option>
+        </select><br><br>
+
+        <div id="platform-container" style="display: none;">
+            <label for="platform">Platform:</label>
+            <input type="text" id="platform" name="platform">
+        </div>
+
+        <div id="location-container" style="display: none;">
+            <label for="location">Address:</label>
+            <input type="text" id="location" name="location">
+        </div>
+
+        <label for="start-time">Start Time:</label>
+        <input type="datetime-local" id="start-time" name="starttime" required><br><br>
+
+        <label for="end-time">End Time:</label>
+        <input type="datetime-local" id="endtime" name="endtime" required><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+
+
+    <script>
+        // JavaScript code to show/hide additional fields based on the translation type selection
+        const translationTypeSelect = document.getElementById('translation-type');
+        const platformContainer = document.getElementById('platform-container');
+        const locationContainer = document.getElementById('location-container');
+        const startTimeInput = document.getElementById('start-time');
+        const endTimeInput = document.getElementById('end-time');
+    
+        translationTypeSelect.addEventListener('change', function() {
+            const selectedOption = translationTypeSelect.value;
+    
+            if (selectedOption === 'Online') {
+                platformContainer.style.display = 'block';
+                locationContainer.style.display = 'none';
+            } else if (selectedOption === 'Physical') {
+                platformContainer.style.display = 'none';
+                locationContainer.style.display = 'block';
+            } else {
+                platformContainer.style.display = 'none';
+                locationContainer.style.display = 'none';
+            }
+        });
+    
+        // Validation to prevent past times and seconds in start and end time inputs
+        const currentTime = new Date().toISOString().split(':').slice(0, 2).join(':');
+        startTimeInput.min = currentTime;
+        endTimeInput.min = currentTime;
+    </script>
+{% endblock %} 

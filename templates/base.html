@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/base.css') }}">
+    <title>{% block title %}{% endblock %}</title>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+
+    {% block content %}
+    {% endblock %}
+
+
+    <footer>
+        <hr>
+        <p>&copy; <span id="currentYear"></span> <a href="https://tolkar.se/">Tolkar.se</a>. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Get the current year
+        var year = new Date().getFullYear();
+        // Set the current year in the span element
+        document.getElementById("currentYear").innerHTML = year;
+    </script>
+    </div>
+</body>
+</html>

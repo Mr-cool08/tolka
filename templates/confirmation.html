@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}
+    Booking Confirmation
+{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/confirmation.css') }}">
+{% endblock %}
+
+{% block content %}
+    <h1>Booking Confirmation</h1>
+    <p>Name: {{ name }}</p>
+    <p>Email: {{ email }}</p>
+    <p>Phone number: {{ phone }}</p>
+    <p>Language: {{ language }}</p>
+    <p>Start time: {{ time_start }}</p>
+    <p>End time: {{ time_end }}</p>
+{% endblock %}

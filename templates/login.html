@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}
+    login
+{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/login.css') }}">
+{% endblock %}  
+
+{% block content %}
+<h1>Login</h1>
+<form action="/login" method="POST">
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <input type="submit" value="Login">
+</form>
+
+{% endblock %}
