@@ -39,3 +39,6 @@ input[type="checkbox"] {
         display: block; /* Show the hidden containers on mobile */
     }
 }
+.required {
+    color: red,
+}

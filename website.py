@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, render_template, request, session, redirect, url_for
 import sqlite3
 from datetime import datetime
 import smtplib
@@ -197,7 +197,10 @@ def submit():
 @app.route('/billing', methods=['GET', 'POST'])
 def billing():
     if request.method == 'GET':
-        return render_template('billing.html')  # Render the billing information form
+        if 'name' not in session:
+            return redirect(url_for('index')) 
+        else:
+            return render_template('billing.html')  # Render the billing information form
 
     # Retrieve the billing information from the form
     organization_number = request.form['organization_number']
@@ -205,37 +208,63 @@ def billing():
     email_billing_address = request.form['email_billing_address']
     marking = request.form['marking']
     reference = request.form['reference']
-
-    # Retrieve the form data from the session
-    name = session.get('name')
-    email = session.get('email')
-    language = session.get('language')
-    time_start = session.get('time_start')
-    time_end = session.get('time_end')
-    phone = session.get('phone')
-    print(time_start)
-    print(time_end)  
-    # Connect to the database
-    conn = sqlite3.connect('bookings.db')
-    cursor = conn.cursor()
-    time.sleep(1)
-
-    # Insert the booking details into the database, including the billing information
-    cursor.execute(
-        "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
-    conn.commit()
-
-    # Close the database connection
-    conn.close()
+    session['organization_number'] = organization_number
+    session['billing_address'] = billing_address
+    session['email_billing_address'] = email_billing_address
+    session['marking'] = marking
+    session['reference'] = reference
+    
 
     # Mark the form as submitted in the session
     session['submitted'] = True
+    return redirect(url_for('confirmation'))
 
-    return render_template('confirmation.html', name=name, email=email, phone=phone, language=language, time_start=time_start, time_end=time_end, organization_number=organization_number, billing_address=billing_address, email_billing_address=email_billing_address, marking=marking, reference=reference)
+@app.route('/confirmation', methods=['GET', 'POST'])
+def confirmation():
+    if 'submitted' not in session or session['submitted'] == False:
+        return redirect(url_for('index'))
+    else:
+        if request.method == 'GET':
+            organization_number = session.get('organization_number')
+            billing_address = session.get('billing_address')
+            email_billing_address = session.get('email_billing_address')
+            marking = session.get('marking')
+            reference = session.get('reference')
+            name = session.get('name')
+            email = session.get('email')
+            language = session.get('language')
+            time_start = session.get('time_start')
+            time_end = session.get('time_end')
+            phone = session.get('phone')
+            return render_template('confirmation.html', name=name, email=email, phone=phone, language=language, time_start=time_start, time_end=time_end, organization_number=organization_number, billing_address=billing_address, email_billing_address=email_billing_address, marking=marking, reference=reference)
+        elif request.method == 'POST':
+            organization_number = session.get('organization_number')
+            billing_address = session.get('billing_address')
+            email_billing_address = session.get('email_billing_address')
+            marking = session.get('marking')
+            reference = session.get('reference')
+            name = session.get('name')
+            email = session.get('email')
+            language = session.get('language')
+            time_start = session.get('time_start')
+            time_end = session.get('time_end')
+            phone = session.get('phone')
+            conn = sqlite3.connect('bookings.db')
+            cursor = conn.cursor()
+            time.sleep(1)
+            session['submitted'] = False
+            return "Booking saved"
+        else:
+            return "invalid request"
 
+        # Insert the booking details into the database, including the billing information
+        cursor.execute(
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
+        conn.commit()
 
-
+        # Close the database connection
+        conn.close()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -255,7 +284,7 @@ def page_not_found(e):
     return render_template('error.html', message='This was not what you were looking for.', error_name='404')
 if __name__ == '__main__':
     # Connect to the database and create the 'bookings' table if it doesn't exist
-    conn = sqlite3.connect('bookings.sqlite')
+    conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
     # Create the 'bookings' table if it doesn't exist
@@ -281,7 +310,12 @@ if __name__ == '__main__':
                     phone TEXT NOT NULL,
                     language TEXT NOT NULL,
                     time_start TEXT NOT NULL,
-                    time_end TEXT NOT NULL)''')
+                    time_end TEXT NOT NULL,
+                    organization_number TEXT,
+                    billing_address TEXT,
+                    email_billing_address TEXT,
+                    marking TEXT,
+                    reference TEXT)''')
 
     conn.close()
     # deepcode ignore RunWithDebugTrue: fixing later

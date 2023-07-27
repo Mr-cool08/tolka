@@ -7,11 +7,25 @@
 {% endblock %}
 
 {% block content %}
+<div class="container">
     <h1>Booking Confirmation</h1>
-    <p>Name: {{ name }}</p>
-    <p>Email: {{ email }}</p>
-    <p>Phone number: {{ phone }}</p>
-    <p>Language: {{ language }}</p>
-    <p>Start time: {{ time_start }}</p>
-    <p>End time: {{ time_end }}</p>
+    <div class="info">
+        <p><strong>Name:</strong> {{ name }}</p>
+        <p>Email: {{ email }}</p>
+        <p>Phone number: {{ phone }}</p>
+        <p>Language: {{ language }}</p>
+        <p>Start time: {{ time_start }}</p>
+        <p>End time: {{ time_end }}</p>
+        {% if organization_number %}
+            <p>Organization number: {{ organization_number }} </p>
+        {% endif %}
+        <p>Billing address: {{ billing_address }} </p>
+        <p>Email billing address: {{ email_billing_address }} </p>
+        <p>Marking: {{ marking }} </p>
+        <p>Reference: {{ reference }} </p>
+        <form method="post" action="#">
+            <input type="submit" value="Confirm" name="Confirm"/>
+        </form>
+    </div>
+</div>
 {% endblock %}
