@@ -27,13 +27,12 @@ Since this is a web application, you do not need to install it locally. You can 
 # 3. Usage
 
 Home page: The home page displays general information about the translation service. 
-This part is not a part of the application.
+This is not a part of the application.
 
 Submit Translation Job:
 
-1. Click on the "Submit Job" button on the home page.
-2. Fill out the required information in the form, including name, email, preferred language, start time, end time, and phone number.
-3. Click "Submit" to proceed to the billing information form.
+1. Fill out the required information in the form, including name, email, preferred language, start time, end time, and phone number.
+2. Click "Submit" to proceed to the billing information form.
 
 Billing Information Form:
 
