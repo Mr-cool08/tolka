@@ -57,11 +57,11 @@ The application uses a SQLite database to store translation job and billing info
 
 The application defines several routes for different functionalities:
 
-- /: Home page route that displays general information about the translation service.
+- /: Submit form: Route for submitting translation job information.
 - /submit: Route for submitting translation job requests.
 - /billing: Route for submitting billing information.
 - /login: Route for authentication to access and accept translation job requests.
-- /jobs: Route to view and accept translation job requests.
+- /jobs: Route to view and accept translation job requests, authentication is needed to access.
 - /jobs/<int:job_id>: Route to accept a specific translation job request.
 
  6. Authentication
