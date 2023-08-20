@@ -9,23 +9,24 @@ from dotenv import load_dotenv
 import time
 import stuff
 
-
-
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = stuff.generate_secret_key()
 
 # Define the password for accessing the /jobs route
 PASSWORD = os.getenv('password')
-
+@app.route('/logout')
+def logout():
+    session.pop('authenticated', None)
+    return redirect(url_for('login'))
+    
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/jobs', methods=['GET']) # The page to display the list of jobs
+@app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
-    # Check if the user is authenticated
-    if 'authenticated' not in session:
+    if 'authenticated' not in session or session['authenticated'] == False:
         return render_template('login.html')
 
     # Connect to the database
@@ -297,8 +298,8 @@ if __name__ == '__main__':
                     time_start TEXT NOT NULL,
                     time_end TEXT NOT NULL,
                     organization_number TEXT,
-                    billing_address TEXT,
-                    email_billing_address TEXT,
+                    billing_address TEXT NOT NULL,
+                    email_billing_address TEXT NOT NULL,
                     marking TEXT,
                     reference TEXT)''')
 
@@ -312,11 +313,10 @@ if __name__ == '__main__':
                     time_start TEXT NOT NULL,
                     time_end TEXT NOT NULL,
                     organization_number TEXT,
-                    billing_address TEXT,
-                    email_billing_address TEXT,
+                    billing_address TEXT NOT NULL,
+                    email_billing_address TEXT NOT NULL,
                     marking TEXT,
                     reference TEXT)''')
 
     conn.close()
-    # deepcode ignore RunWithDebugTrue: fixing later
     app.run(port=8080, host="0.0.0.0", debug=True)

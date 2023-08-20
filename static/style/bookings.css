@@ -5,10 +5,6 @@ body {
     padding: 20px;
 }
 
-h1 {
-    color: #333;
-    text-align: center;
-}
 
 .job-list {
     list-style-type: none;
@@ -53,4 +49,20 @@ h1 {
     background-color: #555;
 }
 
-/* CSS to position the footer at the bottom */
+
+/* Styles for the logout button */
+.logout-button {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout-button:hover {
+    background-color: #555;
+}
