@@ -64,7 +64,7 @@ The application defines several routes for different functionalities:
 - /jobs: Route to view and accept translation job requests, authentication is needed to access.
 - /jobs/<int:job_id>: Route to accept a specific translation job request.
 
- 6. Authentication
+# 6. Authentication
 
 The application uses a simple password-based authentication mechanism to protect the /jobs route. The password is stored as an environment variable and is required to access the job request list.
 
@@ -75,7 +75,7 @@ The application handles various types of errors gracefully and provides appropri
 - /error: Route to display custom error messages with error codes.
 - /error/404: Route to handle page-not-found errors (HTTP 404).
 
-8. License
+# 8. License
 
 This project is licensed under the MIT License.
 
