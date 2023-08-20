@@ -26,7 +26,8 @@ Since this is a web application, you do not need to install it locally. You can 
 
 # 3. Usage
 
-Home page: The home page displays general information about the translation service. That are the website that are displayed before the form
+Home page: The home page displays general information about the translation service. 
+This part is not a part of the application.
 
 Submit Translation Job:
 
