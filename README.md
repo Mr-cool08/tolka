@@ -15,21 +15,18 @@ Table of Contents
 8. License
 
 # 1. Installation
----------------
 
 Since this is a web application, you do not need to install it locally. You can access the live version of the application at https://www.tolkar.se/.
 
 # 2. Features
------------
 
 - Users can submit translation job requests through the web interface.
 - Authenticated users can view the list of job requests and accept them.
 - Confirmation emails are sent to users and the translation company upon job acceptance.
 
 # 3. Usage
---------
 
-Home Page: The home page displays general information about the translation service.
+Home page: The home page displays general information about the translation service. That are the website that are displayed before the form
 
 Submit Translation Job:
 
@@ -50,7 +47,6 @@ Viewing and Accepting Job Requests (For Authenticated Users):
 4. Confirmation emails will be sent to the user and the translation company upon accepting the job.
 
 # 4. Database
------------
 
 The application uses a SQLite database to store translation job and billing information. Two tables are used:
 
@@ -58,7 +54,6 @@ The application uses a SQLite database to store translation job and billing info
 - taken_bookings: This table stores the accepted translation jobs.
 
 # 5. Routes
----------
 
 The application defines several routes for different functionalities:
 
@@ -70,12 +65,10 @@ The application defines several routes for different functionalities:
 - /jobs/<int:job_id>: Route to accept a specific translation job request.
 
  6. Authentication
-------------------
 
 The application uses a simple password-based authentication mechanism to protect the /jobs route. The password is stored as an environment variable and is required to access the job request list.
 
 # 7. Error Handling
------------------
 
 The application handles various types of errors gracefully and provides appropriate error messages to users. Some common error handling routes are:
 
@@ -83,7 +76,6 @@ The application handles various types of errors gracefully and provides appropri
 - /error/404: Route to handle page-not-found errors (HTTP 404).
 
 8. License
-----------
 
 This project is licensed under the MIT License.
 
