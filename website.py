@@ -252,6 +252,13 @@ def confirmation():
             phone = session.get('phone')
             conn = sqlite3.connect('bookings.db')
             cursor = conn.cursor()
+            cursor.execute(
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
+            conn.commit()
+
+        # Close the database connection
+            conn.close()
             time.sleep(1)
             session['submitted'] = False
             return "Booking saved"

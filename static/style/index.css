@@ -18,27 +18,7 @@ input[type="checkbox"] {
     display: none;
 }
 
-/* Mobile-specific styles */
-@media (max-width: 320px) {
-    h1 {
-        color:#ccc;
-    }
-    input[type="text"],
-    input[type="tel"],
-    input[type="email"],
-    select,
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="checkbox"] {
-        width: 100%; /* Adjust width to fit smaller screens */
-        margin-right: 0; /* Optional: Remove right margin if you want full-width inputs */
-    }
 
-    #platform-container,
-    #location-container {
-        display: block; /* Show the hidden containers on mobile */
-    }
-}
 .required {
     color: red,
 }
