@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import smtplib
 import os
 from email.mime.text import MIMEText
@@ -8,6 +8,22 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import time
 import stuff
+from itertools import combinations
+
+languages = [
+    "Franska", "Svenska", "Engelska", "Tyska", "Spanska",
+    "Portugisiska", "Italienska", "Ryska", "Kinesiska", "Arabiska",
+    "Japanska", "Koreanska", "Nederländska", "Grekiska", "Turkiska",
+    "Hebreiska", "Finska", "Danska", "Norska", "Isländska",
+    "Polska", "Ungerska", "Tjeckiska", "Slovakiska", "Kroatiska",
+    "Serbiska", "Rumänska", "Bulgarska", "Ukrainska", "Georgiska",
+    "Persiska", "Hindi", "Bengali", "Tamil", "Urdu",
+    "Malayalam", "Thai", "Vietnamesiska", "Malaysiska", "Indonesiska",
+    "Filippinska", "Sinhala", "Svahili", "Amhariska", "Swahili",
+    "Somaliska", "Fula", "Yoruba", "Zulu"
+]
+
+
 
 load_dotenv()
 app = Flask(__name__)
@@ -22,7 +38,16 @@ def logout():
     
 @app.route('/')
 def index():
-    return render_template('index.html')
+    combinations_list = combinations(languages, 2)
+    unique_combinations = set()
+    
+    for combo in combinations_list:
+        combo_str = " - ".join(combo)
+        unique_combinations.add(combo_str)
+    
+    sorted_combinations = sorted(unique_combinations)
+    
+    return render_template('index.html', combo_list=sorted_combinations)
 
 @app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
@@ -75,26 +100,23 @@ def accept_job(job_id):
         # Making the email body and subject
         email_subject = f"Translation Application - Job ID: {job_id}"
         email_body = f"""
-        Dear Sir/Madam,
+        Kära Herr/Fru,
 
-        Here is the application for the job ID: {job_id}.
+        Här är ansökan för jobb-ID: {job_id}.
 
-        Name: {job_data[0]}
-        Email: {job_data[1]}
-        Phone number: {job_data[2]}
-        Preferred Language: {job_data[3]}
-        Available Start Time: {job_data[4]}
-        Available End Time: {job_data[5]}
+        Namn: {job_data[0]}
+        E-post: {job_data[1]}
+        Telefonnummer: {job_data[2]}
+        Önskat språk: {job_data[3]}
+        Starttid: {job_data[4]}
+        Sluttid: {job_data[5]}
 
+        Vänligen granska sökandens kvalifikationer och referenser. Om du behöver ytterligare information eller har några frågor, vänligen kontakta sökanden direkt via det angivna e-postadressen eller telefonnumret.
 
-        Please review the applicant's qualifications and credentials. If you require any further information or have any questions, please reach out to the applicant directly using the provided email address or phone number.
-        
-        
-        Thank you for choosing our service. We appreciate your support.
-        
-        
-        Best regards,
-        The Tolkar Team"""   
+        Tack för att du valde vår tjänst. Vi uppskattar ditt stöd.
+
+        Med vänliga hälsningar,
+        Tolkar-teamet"""   
         # Prepare email message
         msg = MIMEMultipart()
         msg['From'] = os.getenv("email") # Retrieving the email from the session
@@ -119,23 +141,23 @@ def accept_job(job_id):
         # Making the email body and subject
         email_subject = f"Translation Application - Job ID: {job_id}"
         email_body = f"""
-        Dear Sir/Madam,
+                Kära Herr/Fru,
 
-        Your application for the job ID: {job_id} has been accepted.
+        Din ansökan för jobb-ID: {job_id} har blivit accepterad.
         
-        If you haven't used our service, please contact us.
-        Here is your information:   
-        Name: {job_data[0]}
-        Preferred Language: {job_data[3]}
-        Available Start Time: {job_data[4]}
-        Available End Time: {job_data[5]}
-        
-        
-        Thank you for choosing our service. We appreciate your support.
+        Om du inte har använt vår tjänst, vänligen kontakta oss.
+        Här är din information:   
+        Namn: {job_data[0]}
+        Önskat språk: {job_data[3]}
+        Starttid: {job_data[4]}
+        Sluttid: {job_data[5]}
         
         
-        Best regards,
-        The Tolkar Team"""
+        Tack för att du valde vår tjänst. Vi uppskattar ditt stöd.
+        
+        
+        Med vänliga hälsningar,
+        Tolkar-teamet"""
         msg = MIMEMultipart()
         msg['From'] = os.getenv("email") # Retrieving the email from the .env file
         msg['To'] = job_data[1] # Retrieving the email from the database
@@ -168,18 +190,16 @@ def submit():
         email = request.form['email']
         language = request.form['language']
         time_start_str = request.form['starttime']
-        time_end_str = request.form['endtime'] 
+        time_end_minutes = int(request.form['endtime'])  # Retrieve the selected end time in minutes
         phone = request.form['phone']
         time_start = datetime.strptime(time_start_str, '%Y-%m-%dT%H:%M')
-        time_end = datetime.strptime(time_end_str, '%Y-%m-%dT%H:%M')
-        time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')# Extract date, hours, and minutes
-        time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')# Extract date, hours, and minutes
-
         
+        # Calculate the end time based on the selected minutes
+        time_end = time_start + timedelta(minutes=time_end_minutes)
         
-
-
-
+        time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
+        time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
+        
         # Check if the booking already exists in the database
         if stuff.booking_exists(name, email, phone, language, time_start, time_end):
             return render_template('error.html', message='This booking already exists.', error_name='409')
@@ -191,7 +211,6 @@ def submit():
         session['language'] = language
         session['time_start'] = time_start_str_trimmed
         session['time_end'] = time_end_str_trimmed
-        
 
         return redirect('/billing')
 
@@ -252,6 +271,13 @@ def confirmation():
             phone = session.get('phone')
             conn = sqlite3.connect('bookings.db')
             cursor = conn.cursor()
+            cursor.execute(
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
+            conn.commit()
+
+        # Close the database connection
+            conn.close()
             time.sleep(1)
             session['submitted'] = False
             return "Booking saved"

@@ -10,35 +10,30 @@ input[type="checkbox"] {
     padding: 10px;
     border-radius: 4px;
     border: 1px solid #ccc;
-    margin-bottom: 10px;
 }
 
 #platform-container,
 #location-container {
     display: none;
+    margin-bottom: 60px;
 }
 
-/* Mobile-specific styles */
-@media (max-width: 320px) {
-    h1 {
-        color:#ccc;
-    }
-    input[type="text"],
-    input[type="tel"],
-    input[type="email"],
-    select,
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="checkbox"] {
-        width: 100%; /* Adjust width to fit smaller screens */
-        margin-right: 0; /* Optional: Remove right margin if you want full-width inputs */
-    }
-
-    #platform-container,
-    #location-container {
-        display: block; /* Show the hidden containers on mobile */
-    }
-}
 .required {
-    color: red,
+    color: red;
+}
+/* Adjust select width for smaller screens (e.g., mobile) */
+@media (max-width: 768px) {
+    input[type="datetime-local"],
+    select {
+        margin-bottom: 10px;
+        max-width: 400px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        height: 50px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 100%; /* Adjust the width as needed for mobile */
+        
+    }
 }

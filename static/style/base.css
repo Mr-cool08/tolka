@@ -2,18 +2,19 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f2f2f2;
     margin: 0;
-    padding: 20px;
+    padding: 0px;
 }
 
 footer {
-    position: fixed;
+    background-color: #f2f2f2;
+    padding: 10px 0; /* Increased the padding for better spacing */
+    text-align: center;
+    font-size: 13px;
+    position: fixed; /* Changed to fixed for a sticky footer */
     bottom: 0;
     width: 100%;
-    background-color: #f5f5f5;
-    padding: 5px 0;
-    text-align: center;
-    font-size: 14px;
 }
+
 
 h1 {
     color: #333;
@@ -21,12 +22,14 @@ h1 {
 }
 
 form {
+    margin-bottom: 10px;
     max-width: 400px;
     margin: 0 auto;
     background-color: #fff;
-    padding: 20px;
+    padding: 30px;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 60px;
 }
 
 label {
@@ -55,22 +58,5 @@ p {
     
 }
 
-/* Mobile-specific styles */
-@media (max-width: 768px) {
-    body {
-        padding: 10px; /* Adjust body padding for smaller screens */
-    }
 
-    footer {
-        padding: 5px 0; /* Adjust footer padding for smaller screens */
-    }
 
-    form {
-        padding: 15px; /* Adjust form padding for smaller screens */
-    }
-
-    input[type="submit"] {
-        /* Adjust button styles for mobile */
-        padding: 8px;
-    }
-}
