@@ -1,4 +1,0 @@
-platform input påplats, telefon, zoom
-tid input start tid/datum 
-ny input tolklängd
-ta bort endtime
