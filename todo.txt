@@ -8,4 +8,4 @@ istället än slut tid tidslängd
 tidslängder per halv timme
 avtals kund på /billing - skriva kod
 address, postnummer, ort /billing
-requered bort på marking
+

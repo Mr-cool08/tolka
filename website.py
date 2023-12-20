@@ -11,7 +11,7 @@ import stuff
 from itertools import combinations
 
 languages = [
-    "Franska", "Svenska", "Engelska", "Tyska", "Spanska",
+    "Franska", "Engelska", "Tyska", "Spanska",
     "Portugisiska", "Italienska", "Ryska", "Kinesiska", "Arabiska",
     "Japanska", "Koreanska", "Nederländska", "Grekiska", "Turkiska",
     "Hebreiska", "Finska", "Danska", "Norska", "Isländska",
@@ -38,16 +38,8 @@ def logout():
     
 @app.route('/')
 def index():
-    combinations_list = combinations(languages, 2)
-    unique_combinations = set()
     
-    for combo in combinations_list:
-        combo_str = " - ".join(combo)
-        unique_combinations.add(combo_str)
-    
-    sorted_combinations = sorted(unique_combinations)
-    
-    return render_template('index.html', combo_list=sorted_combinations)
+    return render_template('index.html', combo_list=languages)
 
 @app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
