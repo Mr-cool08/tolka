@@ -2,43 +2,84 @@
 
 {% block title %}Available Jobs{% endblock %}
     
-    {% block head %}
+{% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style/bookings.css') }}">
-    <meta http-equiv="refresh" content="10">
-    {% endblock %}
-    {% block content %}
-    <a href="/logout">  
-    <button class="logout-button" href = "/logout">Logout</button>
-    </a>
-<h1>Available Jobs</h1>
+    <style>
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
 
-{% if jobs %}
-    <ul class="job-list">
-        {% for job in jobs %}
-            <li class="job-item">
-                <div class="job-details">
-                    <span class="job-title">Name: {{ job[1] }}<br>Email: {{ job[2] }}<br>Phone: {{ job[3] }}<br>Language: {{ job[4] }}<br>Start time: {{ job[5] }} <br>End time:{{ job[6] }}</span>
-                    <div class="job-actions">
-                        <button class="job-accept-btn" onclick="acceptJob({{ job[0] }})">Accept</button>
+        .loading-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <meta http-equiv="refresh" content="10">
+{% endblock %}
+
+{% block content %}
+    <a href="/logout">  
+        <button class="logout-button" href="/logout">Logout</button>
+    </a>
+    <h1>Available Jobs</h1>
+
+    {% if jobs %}
+        <ul class="job-list">
+            {% for job in jobs %}
+                <li class="job-item">
+                    <div class="job-details">
+                        <span class="job-title">Name: {{ job[1] }}<br>Email: {{ job[2] }}<br>Phone: {{ job[3] }}<br>Language: {{ job[4] }}<br>Start time: {{ job[5] }} <br>End time:{{ job[6] }}</span>
+                        <div class="job-actions">
+                            <button class="job-accept-btn" onclick="acceptJob({{ job[0] }})">Accept</button>
+                        </div>
                     </div>
-                </div>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p><center>No jobs available at the moment.</center></p>
-{% endif %}
-<script>
-function acceptJob(jobId) {
-    fetch(`/jobs/${jobId}`, { method: 'POST' })
-        .then(response => {
-            if (response.ok) {
-                alert('Job accepted and mail sent!');
-                location.reload();  // Refresh the page to update the job list
-            } else {
-                alert('Failed to accept the job. Please refresh the page.');
-            }
-        });
-}
-</script>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p><center>No jobs available at the moment.</center></p>
+    {% endif %}
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+        function acceptJob(jobId) {
+            // Display loading overlay
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            fetch(`/jobs/${jobId}`, { method: 'POST' })
+                .then(response => {
+                    // Hide loading overlay when the request is complete
+                    document.getElementById('loadingOverlay').style.display = 'none';
+
+                    if (response.ok) {
+                        alert('Job accepted and mail sent!');
+                        location.reload();  // Refresh the page to update the job list
+                    } else {
+                        alert('Failed to accept the job. Please refresh the page.');
+                    }
+                });
+        }
+    </script>
 {% endblock %}

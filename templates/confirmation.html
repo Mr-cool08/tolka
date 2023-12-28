@@ -19,10 +19,21 @@
         {% if organization_number %}
             <p>Organization number: {{ organization_number }} </p>
         {% endif %}
+        {% if billing_address %}
         <p>Billing address: {{ billing_address }} </p>
+        {% endif %}
+        {% if email_billing_address %}
         <p>Email billing address: {{ email_billing_address }} </p>
+        {% endif %}
+        {% if marking %}
         <p>Marking: {{ marking }} </p>
+        {% endif %}
+        {% if reference %}
         <p>Reference: {{ reference }} </p>
+        {% endif %}
+        {% if avtalskund_marking %}
+        Märkning: {{avtalskund_marking}}
+        {% endif %}
         <form method="post" action="#">
             <input type="submit" value="Confirm" name="Confirm"/>
         </form>

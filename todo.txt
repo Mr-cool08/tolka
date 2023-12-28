@@ -1,11 +1,14 @@
 översätta till svenska
-bara ett språk när man ska välja
-landnings sida när man bokat
+bara ett språk när man ska välja *
+landnings sida när man bokat *
 mail ska stå vara bekreftelse
-när man bekreftar job ska det vara loading
+när man bekreftar job ska det vara loading *
 översättnings typ förvald telefon
 istället än slut tid tidslängd
-tidslängder per halv timme
-avtals kund på /billing - skriva kod
-address, postnummer, ort /billing
+tidslängder per halv timme *
+avtals kund på /billing - skriva kod *
+address, postnummer, ort /billing 
 
+
+
+* = klar

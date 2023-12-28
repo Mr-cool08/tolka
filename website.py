@@ -74,11 +74,12 @@ def accept_job(job_id):
     cursor = conn.cursor()
 
     # Retrieve job information from the database
-    cursor.execute("SELECT name, email, phone, language, time_start, time_end FROM bookings WHERE id = ?", (job_id,))
+    cursor.execute("SELECT name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference FROM bookings WHERE id = ?", (job_id,))
     job_data = cursor.fetchone()
 
     # Insert the accepted job into the 'taken_bookings' table
-    cursor.execute("INSERT INTO taken_bookings (name, email, phone, language, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)", (job_data[0], job_data[1], job_data[2], job_data[3], job_data[4], job_data[5]))
+    cursor.execute("INSERT INTO taken_bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ((job_data[0], job_data[1], job_data[2], job_data[3], job_data[4], job_data[5], job_data[6], job_data[7], job_data[8], job_data[9], job_data[10], job_data[11])
+))
     conn.commit()
 
     # Delete the accepted job from the 'bookings' table
@@ -94,7 +95,7 @@ def accept_job(job_id):
         email_body = f"""
         Kära Herr/Fru,
 
-        Här är ansökan för jobb-ID: {job_id}.
+        Här är bekräftelsen för jobb-ID: {job_id}.
 
         Namn: {job_data[0]}
         E-post: {job_data[1]}
@@ -219,7 +220,9 @@ def billing():
     billing_address = request.form['billing_address']
     email_billing_address = request.form['email_billing_address']
     marking = request.form['marking']
+    avtalskund_marking = request.form['avtalskund_marking']
     reference = request.form['reference']
+    session["avtalskund_marking"] = avtalskund_marking
     session['organization_number'] = organization_number
     session['billing_address'] = billing_address
     session['email_billing_address'] = email_billing_address
@@ -242,19 +245,21 @@ def confirmation():
             email_billing_address = session.get('email_billing_address')
             marking = session.get('marking')
             reference = session.get('reference')
+            avtalskund_marking = session.get('avtalskund_marking')
             name = session.get('name')
             email = session.get('email')
             language = session.get('language')
             time_start = session.get('time_start')
             time_end = session.get('time_end')
             phone = session.get('phone')
-            return render_template('confirmation.html', name=name, email=email, phone=phone, language=language, time_start=time_start, time_end=time_end, organization_number=organization_number, billing_address=billing_address, email_billing_address=email_billing_address, marking=marking, reference=reference)
+            return render_template('confirmation.html', name=name, email=email, phone=phone, language=language, time_start=time_start, time_end=time_end, organization_number=organization_number, billing_address=billing_address, email_billing_address=email_billing_address, marking=marking, reference=reference, avtalskund_marking=avtalskund_marking)
         elif request.method == 'POST':
             organization_number = session.get('organization_number')
             billing_address = session.get('billing_address')
             email_billing_address = session.get('email_billing_address')
             marking = session.get('marking')
             reference = session.get('reference')
+            avtalskund_marking = session.get('avtalskund_marking')
             name = session.get('name')
             email = session.get('email')
             language = session.get('language')
@@ -264,15 +269,15 @@ def confirmation():
             conn = sqlite3.connect('bookings.db')
             cursor = conn.cursor()
             cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference))
             conn.commit()
 
         # Close the database connection
             conn.close()
             time.sleep(1)
             session['submitted'] = False
-            return "Booking saved"
+            return redirect("https://www.tolkar.se/bekraftelse/")
         else:
             return "invalid request"
 
@@ -316,9 +321,10 @@ if __name__ == '__main__':
                     time_start TEXT NOT NULL,
                     time_end TEXT NOT NULL,
                     organization_number TEXT,
-                    billing_address TEXT NOT NULL,
-                    email_billing_address TEXT NOT NULL,
+                    billing_address TEXT,
+                    email_billing_address TEXT,
                     marking TEXT,
+                    avtalskund_marking TEXT,
                     reference TEXT)''')
 
     # Create the 'taken_bookings' table if it doesn't exist
@@ -331,9 +337,10 @@ if __name__ == '__main__':
                     time_start TEXT NOT NULL,
                     time_end TEXT NOT NULL,
                     organization_number TEXT,
-                    billing_address TEXT NOT NULL,
-                    email_billing_address TEXT NOT NULL,
+                    billing_address TEXT ,
+                    email_billing_address TEXT ,
                     marking TEXT,
+                    AVTALSKUND_MARKING TEXT,
                     reference TEXT)''')
 
     conn.close()

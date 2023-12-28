@@ -61,13 +61,13 @@ Bokning av översättare
         startTimeInput.min = currentTime;
         endTimeSelect.min = currentTime;
     
-        // Populate the end time dropdown with 15-minute intervals
-        for (let i = 1; i < 24 * 4; i++) { // Start from 1 to exclude 0 minutes
-            const totalMinutes = i * 15;
+        // Populate the end time dropdown with 30-minute intervals
+        for (let i = 1; i < 24 * 2; i++) { // Start from 1 to exclude 0 minutes
+            const totalMinutes = i * 30;
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
             const option = document.createElement("option");
-    
+
             if (hours > 0) {
                 if (minutes === 0) {
                     option.value = hours * 60; // Convert hours to minutes
@@ -80,9 +80,10 @@ Bokning av översättare
                 option.value = totalMinutes;
                 option.textContent = `${minutes} minute${minutes > 1 ? 's' : ''}`;
             }
-    
+
             endTimeSelect.appendChild(option);
         }
+
     </script>
     
     

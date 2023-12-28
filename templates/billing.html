@@ -8,7 +8,7 @@ Faktureringsinformation
 
 {% block content %}
 <h1>Faktureringsinformation</h1>
-<form method="post" action="/billing" id="billingForm">
+<form method="post" action="/billing">
 
   <label for="avtals_kund">Är du en avtalskund?</label>
   <input type="checkbox" id="avtals_kund" name="avtals_kund" onchange="toggleFields()"><br><br>
@@ -19,23 +19,24 @@ Faktureringsinformation
     <input type="text" id="organization_number" name="organization_number"><br><br>
 
     <label for="billing_address">Fakturaadress*:</label><br>
-    <input type="text" id="billing_address" name="billing_address" required><br><br>
+    <input type="text" id="billing_address" name="billing_address" ><br><br>
 
     <label for="email_billing_address">E-postadress för fakturering*:</label><br>
-    <input type="email" id="email_billing_address" name="email_billing_address" required><br><br>
+    <input type="email" id="email_billing_address" name="email_billing_address" ><br><br>
 
     <label for="marking">Märkning:</label><br>
     <input type="text" id="marking" name="marking"><br><br>
 
     <label for="reference">Referens*:</label><br>
-    <input type="text" id="reference" name="reference" required><br><br>
+    <input type="text" id="reference" name="reference" ><br><br>
   </div>
 
   <!-- Input fields for avtalskund -->
   <div id="avtalskundFields" style="display: none;">
     <!-- Add avtalskund-specific fields here -->
-    <label for="avtalskund_field">Märkning*:</label><br>
-    <input type="text" id="avtalskund_field" name="avtalskund_field" required><br><br>
+    <label for="avtalskund_marking">Märkning*:</label><br>
+    <input type="text" id="avtalskund_marking" name="avtalskund_marking"><br><br>
+
   </div>
 
   <p style="color: red;">*obligatorisk</p>
