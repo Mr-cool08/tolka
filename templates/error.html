@@ -1,20 +1,46 @@
 {% extends "base.html" %}
 {% block title %}
-    error
+    ERROR!
 {% endblock title %}
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style/error.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 {% endblock head %}  
 
 {% block content %}
 
 <div class="container">
-    <h1>Error{% if error_name %}: {{ error_name }}{% endif %}</h1>
-    <p>{{ message }}</p>
-    We are extremely sorry that you found this page.<p>
-        if you want to help contact us on: 
-    <a class="back-button" href="/">Go Back</a>
+    <h1>Fel{% if error_name %}: {{ error_name }}{% endif %}</h1>
+    <p><strong>{{ message }}</strong></p>
+    Vi är mycket ledsna att du hamnade på den här sidan.<p>
+        Om du vill rapportera detta till oss, kontakta oss på:
+        <br>
+        <a href = "mailto: Example@tolkar.se" id="textToCopy">example@tolkar.se</a> 
+        <button id="copyButton" onclick="copyText()">Copy Email</button>
+    <p></p>
+    <a class="back-button" href="/">Gå Tillbaka</a>
 </div>
 
+<script>
+    function copyText() {
+        // Replace 'Your Set Text Here' with the text you want to copy
+        var textToCopy = 'example@tolkar.se';
+
+        // Create a temporary textarea to hold the text
+        var tempTextArea = document.createElement('textarea');
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+
+        // Select and copy the text from the textarea
+        tempTextArea.select();
+        document.execCommand('copy');
+
+        // Remove the temporary textarea
+        document.body.removeChild(tempTextArea);
+
+        // You can provide feedback to the user if needed
+        alert('Email copied to clipboard: ' + textToCopy);
+    }
+</script>
 {% endblock content %}  
 

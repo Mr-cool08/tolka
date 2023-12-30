@@ -305,7 +305,7 @@ def login():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('error.html', message='This was not what you were looking for.', error_name='404')
+    return render_template('error.html', message='Detta var inte vad du letade efter.', error_name='404')
 if __name__ == '__main__':
     # Connect to the database and create the 'bookings' table if it doesn't exist
     conn = sqlite3.connect('bookings.db')

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-    Booking Confirmation
+    Bokningsbekräftelse
 {% endblock %}
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style/confirmation.css') }}">
@@ -8,34 +8,34 @@
 
 {% block content %}
 <div class="container">
-    <h1>Booking Confirmation</h1>
+    <h1>Bokningsbekräftelse</h1>
     <div class="info">
-        <p><strong>Name:</strong> {{ name }}</p>
-        <p>Email: {{ email }}</p>
-        <p>Phone number: {{ phone }}</p>
-        <p>Language: {{ language }}</p>
-        <p>Start time: {{ time_start }}</p>
-        <p>End time: {{ time_end }}</p>
+        <p><strong>Namn:</strong> {{ name }}</p>
+        <p>E-post: {{ email }}</p>
+        <p>Telefonnummer: {{ phone }}</p>
+        <p>Språk: {{ language }}</p>
+        <p>Starttid: {{ time_start }}</p>
+        <p>Sluttid: {{ time_end }}</p>
         {% if organization_number %}
-            <p>Organization number: {{ organization_number }} </p>
+            <p>Organisationsnummer: {{ organization_number }} </p>
         {% endif %}
         {% if billing_address %}
-        <p>Billing address: {{ billing_address }} </p>
+        <p>Faktureringsadress: {{ billing_address }} </p>
         {% endif %}
         {% if email_billing_address %}
-        <p>Email billing address: {{ email_billing_address }} </p>
+        <p>E-post faktureringsadress: {{ email_billing_address }} </p>
         {% endif %}
         {% if marking %}
-        <p>Marking: {{ marking }} </p>
+        <p>Märkning: {{ marking }} </p>
         {% endif %}
         {% if reference %}
-        <p>Reference: {{ reference }} </p>
+        <p>Referens: {{ reference }} </p>
         {% endif %}
         {% if avtalskund_marking %}
         Märkning: {{avtalskund_marking}}
         {% endif %}
         <form method="post" action="#">
-            <input type="submit" value="Confirm" name="Confirm"/>
+            <input type="submit" value="Bekräfta" name="Bekräfta"/>
         </form>
     </div>
 </div>
