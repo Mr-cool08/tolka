@@ -9,9 +9,11 @@ Faktureringsinformation
 {% block content %}
 <h1>Faktureringsinformation</h1>
 <form method="post" action="/billing">
+  
+  <label class="container" for="avtals_kund">Är du en avtalskund?
 
-  <label for="avtals_kund">Är du en avtalskund?</label>
   <input type="checkbox" id="avtals_kund" name="avtals_kund" onchange="toggleFields()"><br><br>
+  <span class="checkmark"></span></label>
 
   <!-- Input fields for non-avtalskund -->
   <div id="nonAvtalskundFields">
@@ -34,8 +36,9 @@ Faktureringsinformation
   <!-- Input fields for avtalskund -->
   <div id="avtalskundFields" style="display: none;">
     <!-- Add avtalskund-specific fields here -->
-    <label for="avtalskund_marking">Märkning*:</label><br>
+    <label for="avtalskund_marking" >Märkning*:</label><br>
     <input type="text" id="avtalskund_marking" name="avtalskund_marking"><br><br>
+    
 
   </div>
 
