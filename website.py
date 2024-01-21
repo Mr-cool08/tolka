@@ -280,7 +280,7 @@ def confirmation():
             return redirect("https://www.tolkar.se/bekraftelse/")
         else:
             return "invalid request"
-
+        """""
         # Insert the booking details into the database, including the billing information
         cursor.execute(
             "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -289,6 +289,7 @@ def confirmation():
 
         # Close the database connection
         conn.close()
+        """""
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

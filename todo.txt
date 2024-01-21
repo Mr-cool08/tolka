@@ -1,7 +1,7 @@
 översätta till svenska
 bara ett språk när man ska välja *
 landnings sida när man bokat *
-mail ska stå vara bekreftelse
+mail ska stå vara bekreftelse 
 när man bekreftar job ska det vara loading *
 översättnings typ förvald telefon
 istället än slut tid tidslängd *
