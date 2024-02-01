@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import time
 import stuff
 from itertools import combinations
+import subprocess
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",
@@ -345,4 +346,4 @@ if __name__ == '__main__':
                     reference TEXT)''')
 
     conn.close()
-    app.run(port=8080, host="0.0.0.0", debug=True)
+    app.run(port=8080, host="0.0.0.0", debug=False)
