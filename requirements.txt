@@ -1,0 +1,10 @@
+Flask==2.3.2
+sqlite3
+datetime
+smtplib
+email
+python-dotenv
+time
+stuff
+itertools
+subprocess
