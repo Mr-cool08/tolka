@@ -346,4 +346,4 @@ if __name__ == '__main__':
                     reference TEXT)''')
 
     conn.close()
-    app.run(port=8080, host="0.0.0.0", debug=False)
+    app.run(port=8080, host="0.0.0.0", debug=True)
