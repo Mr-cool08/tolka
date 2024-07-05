@@ -8,7 +8,8 @@ istället än slut tid tidslängd *
 tidslängder per halv timme *
 avtals kund på /billing - skriva kod *
 address, postnummer, ort /billing  
+lägg in inloggning till eposter i env fil
 
 
 
-* = klard
+* = klart
