@@ -59,11 +59,16 @@ def home():
         row = cursor.fetchone()
         hashed_email = row[0] if row else ''
         conn.close()
-        body = urllib.parse.quote_plus(
-            f"Please remove my account. Email hash: {hashed_email}"
+        message = (
+            "Hello,\n\n"
+            "Please remove my account from Tolkar.se.\n"
+            f"Email hash: {hashed_email}\n\n"
+            "Regards,\n"
         )
+        body = urllib.parse.quote(message)
         removal_link = (
-            f"mailto:placeholder@tolkar.se?subject=Remove%20account&body={body}"
+            "mailto:placeholder@tolkar.se"
+            f"?subject=Account%20Deletion%20Request&body={body}"
         )
         return render_template(
             'home.html', bookings=bookings, removal_link=removal_link

@@ -2,7 +2,6 @@ import sqlite3
 import secrets
 import os
 import hashlib
-import pyotp
 
 
 def generate_secret_key():
