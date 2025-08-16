@@ -25,14 +25,8 @@
         {% if email_billing_address %}
         <p>E-post faktureringsadress: {{ email_billing_address }} </p>
         {% endif %}
-        {% if marking %}
-        <p>Märkning: {{ marking }} </p>
-        {% endif %}
         {% if reference %}
         <p>Referens: {{ reference }} </p>
-        {% endif %}
-        {% if avtalskund_marking %}
-        Märkning: {{avtalskund_marking}}
         {% endif %}
         <form method="post" action="#">
             <input type="submit" value="Bekräfta" name="Bekräfta"/>
