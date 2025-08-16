@@ -15,7 +15,7 @@ body {
 
 .info {
     background-color: #fff;
-    border-radius: 4px; 
+    border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 20px;
     width: 300px;
@@ -27,4 +27,11 @@ form {
     padding: 20px;
     border-radius: 4px;
     box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 600px) {
+    .info {
+        width: 100%;
+        box-sizing: border-box;
+    }
 }

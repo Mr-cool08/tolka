@@ -1,0 +1,35 @@
+.home-options {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+}
+.home-options li {
+    margin: 10px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+}
+button {
+    padding: 5px 10px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+    table {
+        min-width: 500px;
+    }
+}

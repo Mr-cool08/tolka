@@ -32,15 +32,85 @@ app.secret_key = functions.generate_secret_key()
 
 # Define the password for accessing the /jobs route
 PASSWORD = os.getenv('password')
+
+
 @app.route('/logout')
 def logout():
     session.pop('authenticated', None)
-    return redirect(url_for('login'))
-    
+    session.pop('user_id', None)
+    return redirect(url_for('home'))
+
+
 @app.route('/')
+def home():
+    if session.get('user_id'):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT email FROM logins WHERE id = ?", (session['user_id'],)
+        )
+        user_email = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT id, language, time_start, time_end, status FROM bookings WHERE email = ?",
+            (user_email,),
+        )
+        bookings = cursor.fetchall()
+        conn.close()
+        return render_template('home.html', bookings=bookings)
+    return render_template('home.html')
+
+
+@app.route('/booking')
 def index():
-    
-    return render_template('index.html', combo_list=languages)
+    user_name = user_email = user_phone = ''
+    if session.get('user_id'):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT name, email, phone FROM logins WHERE id = ?', (session['user_id'],))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            user_name, user_email, user_phone = row
+    return render_template('index.html', combo_list=languages, user_name=user_name, user_email=user_email, user_phone=user_phone)
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        phone = request.form['phone']
+        password = request.form['password']
+        pwd_hash, salt = functions.hash_password(password)
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO logins (name, email, phone, password_hash, salt) VALUES (?, ?, ?, ?, ?)",
+            (name, email, phone, pwd_hash, salt),
+        )
+        user_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        session['user_id'] = user_id
+        return redirect(url_for('home'))
+    return render_template('signup.html')
+
+
+@app.route('/user_login', methods=['GET', 'POST'])
+def user_login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, password_hash, salt FROM logins WHERE email = ?", (email,))
+        row = cursor.fetchone()
+        conn.close()
+        if row and functions.verify_password(password, row[1], row[2]):
+            session['user_id'] = row[0]
+            return redirect(url_for('home'))
+        return render_template('user_login.html', error='Invalid credentials')
+    return render_template('user_login.html')
 
 @app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
@@ -48,11 +118,11 @@ def get_jobs():
         return render_template('login.html')
 
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    # Retrieve jobs from the database
-    cursor.execute("SELECT * FROM bookings ORDER BY id ASC")
+    # Retrieve pending jobs from the database
+    cursor.execute("SELECT * FROM bookings WHERE status='pending' ORDER BY id ASC")
 
     jobs = cursor.fetchall()
 
@@ -71,20 +141,15 @@ def accept_job(job_id):
         return render_template('login.html')
 
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Retrieve job information from the database
     cursor.execute("SELECT name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference FROM bookings WHERE id = ?", (job_id,))
     job_data = cursor.fetchone()
 
-    # Insert the accepted job into the 'taken_bookings' table
-    cursor.execute("INSERT INTO taken_bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ((job_data[0], job_data[1], job_data[2], job_data[3], job_data[4], job_data[5], job_data[6], job_data[7], job_data[8], job_data[9], job_data[10], job_data[11])
-))
-    conn.commit()
-
-    # Delete the accepted job from the 'bookings' table
-    cursor.execute("DELETE FROM bookings WHERE id = ?", (job_id,))
+    # Mark the job as accepted instead of deleting
+    cursor.execute("UPDATE bookings SET status='accepted' WHERE id = ?", (job_id,))
     conn.commit()
 
     # Close the database connection
@@ -170,6 +235,23 @@ def accept_job(job_id):
     send_tolkar_email() # Running the function to send to the translation company
     send_user_email() # Running the function to send to the user
     return 'Job accepted and email sent'
+
+
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    if not session.get('user_id'):
+        return redirect(url_for('user_login'))
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT email FROM logins WHERE id = ?", (session['user_id'],))
+    user_email = cursor.fetchone()[0]
+    cursor.execute(
+        "UPDATE bookings SET status='cancelled' WHERE id=? AND email=? AND status='pending'",
+        (booking_id, user_email),
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('home'))
 
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
@@ -267,11 +349,11 @@ def confirmation():
             time_start = session.get('time_start')
             time_end = session.get('time_end')
             phone = session.get('phone')
-            conn = sqlite3.connect('bookings.db')
+            conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
             cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference))
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, 'pending'))
             conn.commit()
 
         # Close the database connection
@@ -284,8 +366,8 @@ def confirmation():
         """""
         # Insert the booking details into the database, including the billing information
         cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference, 'pending'))
         conn.commit()
 
         # Close the database connection
@@ -310,7 +392,7 @@ def page_not_found(e):
     return render_template('error.html', message='Detta var inte vad du letade efter.', error_name='404')
 if __name__ == '__main__':
     # Connect to the database and create the 'bookings' table if it doesn't exist
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Create the 'bookings' table if it doesn't exist
@@ -327,23 +409,23 @@ if __name__ == '__main__':
                     email_billing_address TEXT,
                     marking TEXT,
                     avtalskund_marking TEXT,
-                    reference TEXT)''')
+                    reference TEXT,
+                    status TEXT NOT NULL DEFAULT "pending")''')
 
-    # Create the 'taken_bookings' table if it doesn't exist
-    cursor.execute('''CREATE TABLE IF NOT EXISTS taken_bookings
+    # Ensure the status column exists for older databases
+    cursor.execute("PRAGMA table_info(bookings)")
+    columns = [info[1] for info in cursor.fetchall()]
+    if 'status' not in columns:
+        cursor.execute("ALTER TABLE bookings ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'")
+
+    # Create the 'logins' table if it doesn't exist
+    cursor.execute('''CREATE TABLE IF NOT EXISTS logins
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
-                    email TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
                     phone TEXT NOT NULL,
-                    language TEXT NOT NULL,
-                    time_start TEXT NOT NULL,
-                    time_end TEXT NOT NULL,
-                    organization_number TEXT,
-                    billing_address TEXT ,
-                    email_billing_address TEXT ,
-                    marking TEXT,
-                    AVTALSKUND_MARKING TEXT,
-                    reference TEXT)''')
+                    password_hash TEXT NOT NULL,
+                    salt TEXT NOT NULL)''')
 
     conn.close()
     app.run(port=8080, host="0.0.0.0", debug=True)
