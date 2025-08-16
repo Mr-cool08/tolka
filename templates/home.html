@@ -2,13 +2,17 @@
 {% block title %}Hem{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='style/home.css') }}">
+{% if bookings is defined %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/dashboard.css') }}">
+{% endif %}
 {% endblock %}
 {% block content %}
 {% if bookings is defined %}
+<div class="dashboard-container">
   <h1>Dina bokningar</h1>
   {% if bookings %}
   <div class="table-container">
-    <table>
+    <table class="dashboard-table">
       <tr>
         <th>Språk</th>
         <th>Starttid</th>
@@ -21,11 +25,11 @@
         <td>{{ b[1] }}</td>
         <td>{{ b[2] }}</td>
         <td>{{ b[3] }}</td>
-        <td>{{ b[4] }}</td>
+        <td class="status status-{{ b[4] }}">{{ b[4] }}</td>
         <td>
           {% if b[4] == 'pending' %}
           <form method="post" action="{{ url_for('cancel_booking', booking_id=b[0]) }}">
-            <button type="submit">Avbryt</button>
+            <button type="submit" class="cancel-button">Avbryt</button>
           </form>
           {% endif %}
         </td>
@@ -38,7 +42,9 @@
   {% endif %}
   <p><a href="{{ url_for('index') }}">Gör ny bokning</a></p>
   <p><a href="{{ url_for('logout') }}">Logga ut</a></p>
+</div>
 {% else %}
+<div class="home-container">
 <h1>Välkommen</h1>
 <p>Välj ett alternativ:</p>
 <ul class="home-options">
@@ -46,5 +52,6 @@
   <li><a href="{{ url_for('user_login') }}">Logga in</a></li>
   <li><a href="{{ url_for('index') }}">Boka utan konto</a></li>
 </ul>
+</div>
 {% endif %}
 {% endblock %}
