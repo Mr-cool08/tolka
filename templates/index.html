@@ -11,6 +11,7 @@ Bokning av översättare
     <h1>Bokning av översättare</h1>
     
     <form action="/submit" method="post">
+        {% if not logged_in %}
         <label for="name">Fullständigt namn:</label>
         <input type="text" id="name" name="name" value="{{ user_name }}" required><br><br>
 
@@ -19,6 +20,7 @@ Bokning av översättare
 
         <label for="email">E-postadress:</label>
         <input type="email" id="email" name="email" value="{{ user_email }}" required><br><br>
+        {% endif %}
     
         <label for="start-time">Start Tid:</label>
         <input type="datetime-local" id="start-time" name="starttime" required><br><br>

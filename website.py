@@ -63,7 +63,9 @@ def home():
 @app.route('/booking')
 def index():
     user_name = user_email = user_phone = ''
+    logged_in = False
     if session.get('user_id'):
+        logged_in = True
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
         cursor.execute('SELECT name, email, phone FROM logins WHERE id = ?', (session['user_id'],))
@@ -71,7 +73,14 @@ def index():
         conn.close()
         if row:
             user_name, user_email, user_phone = row
-    return render_template('index.html', combo_list=languages, user_name=user_name, user_email=user_email, user_phone=user_phone)
+    return render_template(
+        'index.html',
+        combo_list=languages,
+        user_name=user_name,
+        user_email=user_email,
+        user_phone=user_phone,
+        logged_in=logged_in,
+    )
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -81,12 +90,36 @@ def signup():
         email = request.form['email']
         phone = request.form['phone']
         password = request.form['password']
+        organization_number = request.form.get('organization_number', '')
+        billing_address = request.form.get('billing_address', '')
+        email_billing_address = request.form.get('email_billing_address', '')
+        marking = request.form.get('marking', '')
+        avtalskund_marking = request.form.get('avtalskund_marking', '')
+        reference = request.form.get('reference', '')
         pwd_hash, salt = functions.hash_password(password)
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO logins (name, email, phone, password_hash, salt) VALUES (?, ?, ?, ?, ?)",
-            (name, email, phone, pwd_hash, salt),
+            """
+            INSERT INTO logins (
+                name, email, phone, password_hash, salt,
+                organization_number, billing_address, email_billing_address,
+                marking, avtalskund_marking, reference
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                name,
+                email,
+                phone,
+                pwd_hash,
+                salt,
+                organization_number,
+                billing_address,
+                email_billing_address,
+                marking,
+                avtalskund_marking,
+                reference,
+            ),
         )
         user_id = cursor.lastrowid
         conn.commit()
@@ -255,66 +288,97 @@ def cancel_booking(booking_id):
 
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
-    
     if request.method == 'GET':
-        return redirect('/billing')  # Redirect to the billing information form
-    if "submitted" in session and session["submitted"] == True:
+        if session.get('user_id'):
+            return redirect('/confirmation')
+        return redirect('/billing')
+    if session.get("submitted"):
         return render_template("error.html", message="You have already submitted")
-    else:
-        # Retrieve the form data
-        name = request.form['name']
-        email = request.form['email']
-        language = request.form['language']
-        time_start_str = request.form['starttime']
-        time_end_minutes = int(request.form['endtime'])  # Retrieve the selected end time in minutes
-        phone = request.form['phone']
-        time_start = datetime.strptime(time_start_str, '%Y-%m-%dT%H:%M')
-        
-        # Calculate the end time based on the selected minutes
-        time_end = time_start + timedelta(minutes=time_end_minutes)
-        
-        time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
-        time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
-        
-        # Check if the booking already exists in the database
+
+    language = request.form['language']
+    time_start_str = request.form['starttime']
+    time_end_minutes = int(request.form['endtime'])
+    time_start = datetime.strptime(time_start_str, '%Y-%m-%dT%H:%M')
+    time_end = time_start + timedelta(minutes=time_end_minutes)
+    time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')
+    time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')
+
+    if session.get('user_id'):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT name, email, phone, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference FROM logins WHERE id = ?',
+            (session['user_id'],),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return redirect(url_for('user_login'))
+        name, email, phone, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference = row
         if functions.booking_exists(name, email, phone, language, time_start, time_end):
             return render_template('error.html', message='This booking already exists.', error_name='409')
+        session.update(
+            {
+                'name': name,
+                'email': email,
+                'phone': phone,
+                'language': language,
+                'time_start': time_start_str_trimmed,
+                'time_end': time_end_str_trimmed,
+                'organization_number': organization_number,
+                'billing_address': billing_address,
+                'email_billing_address': email_billing_address,
+                'marking': marking,
+                'avtalskund_marking': avtalskund_marking,
+                'reference': reference,
+                'submitted': True,
+            }
+        )
+        return redirect('/confirmation')
 
-        # Store the form data in the session
-        session['name'] = name
-        session['email'] = email
-        session['phone'] = phone
-        session['language'] = language
-        session['time_start'] = time_start_str_trimmed
-        session['time_end'] = time_end_str_trimmed
-
-        return redirect('/billing')
+    name = request.form['name']
+    email = request.form['email']
+    phone = request.form['phone']
+    if functions.booking_exists(name, email, phone, language, time_start, time_end):
+        return render_template('error.html', message='This booking already exists.', error_name='409')
+    session.update(
+        {
+            'name': name,
+            'email': email,
+            'phone': phone,
+            'language': language,
+            'time_start': time_start_str_trimmed,
+            'time_end': time_end_str_trimmed,
+        }
+    )
+    return redirect('/billing')
 
 @app.route('/billing', methods=['GET', 'POST'])
 def billing():
+    if session.get('user_id'):
+        return redirect(url_for('confirmation'))
     if request.method == 'GET':
         if 'name' not in session:
-            return redirect(url_for('index')) 
-        else:
-            return render_template('billing.html')  # Render the billing information form
+            return redirect(url_for('index'))
+        return render_template('billing.html')
 
-    # Retrieve the billing information from the form
     organization_number = request.form['organization_number']
     billing_address = request.form['billing_address']
     email_billing_address = request.form['email_billing_address']
     marking = request.form['marking']
     avtalskund_marking = request.form['avtalskund_marking']
     reference = request.form['reference']
-    session["avtalskund_marking"] = avtalskund_marking
-    session['organization_number'] = organization_number
-    session['billing_address'] = billing_address
-    session['email_billing_address'] = email_billing_address
-    session['marking'] = marking
-    session['reference'] = reference
-    
-
-    # Mark the form as submitted in the session
-    session['submitted'] = True
+    session.update(
+        {
+            'avtalskund_marking': avtalskund_marking,
+            'organization_number': organization_number,
+            'billing_address': billing_address,
+            'email_billing_address': email_billing_address,
+            'marking': marking,
+            'reference': reference,
+            'submitted': True,
+        }
+    )
     return redirect(url_for('confirmation'))
 
 @app.route('/confirmation', methods=['GET', 'POST'])
@@ -425,7 +489,27 @@ if __name__ == '__main__':
                     email TEXT NOT NULL UNIQUE,
                     phone TEXT NOT NULL,
                     password_hash TEXT NOT NULL,
-                    salt TEXT NOT NULL)''')
+                    salt TEXT NOT NULL,
+                    organization_number TEXT,
+                    billing_address TEXT,
+                    email_billing_address TEXT,
+                    marking TEXT,
+                    avtalskund_marking TEXT,
+                    reference TEXT)''')
+
+    cursor.execute("PRAGMA table_info(logins)")
+    login_columns = [info[1] for info in cursor.fetchall()]
+    extra_cols = [
+        'organization_number',
+        'billing_address',
+        'email_billing_address',
+        'marking',
+        'avtalskund_marking',
+        'reference',
+    ]
+    for col in extra_cols:
+        if col not in login_columns:
+            cursor.execute(f"ALTER TABLE logins ADD COLUMN {col} TEXT")
 
     conn.close()
     app.run(port=8080, host="0.0.0.0", debug=True)
