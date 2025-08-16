@@ -11,14 +11,20 @@ Bokning av översättare
     <h1>Bokning av översättare</h1>
     
     <form action="/submit" method="post">
+        {% if session.get('user_id') %}
+            <input type="hidden" name="name" value="{{ session.get('name') }}">
+            <input type="hidden" name="phone" value="{{ session.get('phone') }}">
+            <input type="hidden" name="email" value="{{ session.get('email') }}">
+        {% else %}
         <label for="name">Fullständigt namn:</label>
         <input type="text" id="name" name="name" required><br><br>
-    
+
         <label for="phone">Telefonnummer:</label>
         <input type="tel" id="phone" name="phone" required><br><br>
-    
+
         <label for="email">E-postadress:</label>
         <input type="email" id="email" name="email" required><br><br>
+        {% endif %}
     
         <label for="start-time">Start Tid:</label>
         <input type="datetime-local" id="start-time" name="starttime" required><br><br>

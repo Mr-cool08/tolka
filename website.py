@@ -10,6 +10,7 @@ import time
 import functions
 from itertools import combinations
 import subprocess
+import hashlib
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",
@@ -38,9 +39,66 @@ def logout():
     return redirect(url_for('login'))
     
 @app.route('/')
-def index():
-    
+def home():
+    return render_template('home.html')
+
+
+@app.route('/booking')
+def booking():
     return render_template('index.html', combo_list=languages)
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        name = request.form['name']
+        email = request.form['email']
+        phone = request.form['phone']
+        salt = os.urandom(16).hex()
+        password_hash = hashlib.sha256((salt + password).encode('utf-8')).hexdigest()
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        try:
+            cursor.execute('INSERT INTO logins (username, name, email, phone, salt, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
+                           (username, name, email, phone, salt, password_hash))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            conn.close()
+            return render_template('signup.html', error='Username already exists')
+        conn.close()
+        return redirect(url_for('user_login'))
+    return render_template('signup.html')
+
+
+@app.route('/user_login', methods=['GET', 'POST'])
+def user_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, email, phone, salt, password_hash FROM logins WHERE username = ?', (username,))
+        user = cursor.fetchone()
+        conn.close()
+        if user and hashlib.sha256((user[4] + password).encode('utf-8')).hexdigest() == user[5]:
+            session['user_id'] = user[0]
+            session['name'] = user[1]
+            session['email'] = user[2]
+            session['phone'] = user[3]
+            return redirect(url_for('booking'))
+        return render_template('user_login.html', error='Invalid credentials')
+    return render_template('user_login.html')
+
+
+@app.route('/user_logout')
+def user_logout():
+    session.pop('user_id', None)
+    session.pop('name', None)
+    session.pop('email', None)
+    session.pop('phone', None)
+    return redirect(url_for('home'))
 
 @app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
@@ -48,7 +106,7 @@ def get_jobs():
         return render_template('login.html')
 
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Retrieve jobs from the database
@@ -71,7 +129,7 @@ def accept_job(job_id):
         return render_template('login.html')
 
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Retrieve job information from the database
@@ -212,7 +270,7 @@ def submit():
 def billing():
     if request.method == 'GET':
         if 'name' not in session:
-            return redirect(url_for('index')) 
+            return redirect(url_for('booking'))
         else:
             return render_template('billing.html')  # Render the billing information form
 
@@ -238,7 +296,7 @@ def billing():
 @app.route('/confirmation', methods=['GET', 'POST'])
 def confirmation():
     if 'submitted' not in session or session['submitted'] == False:
-        return redirect(url_for('index'))
+        return redirect(url_for('booking'))
     else:
         if request.method == 'GET':
             organization_number = session.get('organization_number')
@@ -267,7 +325,7 @@ def confirmation():
             time_start = session.get('time_start')
             time_end = session.get('time_end')
             phone = session.get('phone')
-            conn = sqlite3.connect('bookings.db')
+            conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
             cursor.execute(
             "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -310,7 +368,7 @@ def page_not_found(e):
     return render_template('error.html', message='Detta var inte vad du letade efter.', error_name='404')
 if __name__ == '__main__':
     # Connect to the database and create the 'bookings' table if it doesn't exist
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Create the 'bookings' table if it doesn't exist
@@ -344,6 +402,15 @@ if __name__ == '__main__':
                     marking TEXT,
                     AVTALSKUND_MARKING TEXT,
                     reference TEXT)''')
+    # Create the 'logins' table if it doesn't exist
+    cursor.execute('''CREATE TABLE IF NOT EXISTS logins
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    phone TEXT NOT NULL,
+                    salt TEXT NOT NULL,
+                    password_hash TEXT NOT NULL)''')
 
     conn.close()
     app.run(port=8080, host="0.0.0.0", debug=True)

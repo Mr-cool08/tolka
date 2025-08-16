@@ -26,12 +26,11 @@ Since this is a web application, you do not need to install it locally. You can 
 
 # 3. Usage
 
-Home page: The home page displays general information about the translation service. 
-This is not a part of the application.
+Home page: The home page offers options to create an account, log in, or proceed directly to booking without an account.
 
 Submit Translation Job:
 
-1. Fill out the required information in the form, including name, email, preferred language, start time, end time, and phone number.
+1. If logged in, your saved contact details are reused. Otherwise fill out the required information in the form, including name, email, preferred language, start time, end time, and phone number.
 2. Click "Submit" to proceed to the billing information form.
 
 Billing Information Form:
@@ -48,16 +47,21 @@ Viewing and Accepting Job Requests (For Authenticated Users):
 
 # 4. Database
 
-The application uses a SQLite database to store translation job and billing information. Two tables are used:
+The application uses a SQLite database (`database.db`) to store translation job and user information. Three tables are used:
 
-- bookings: This table stores the translation job details and billing information submitted by users.
-- taken_bookings: This table stores the accepted translation jobs.
+- bookings: Stores the translation job details and billing information submitted by users.
+- taken_bookings: Stores the accepted translation jobs.
+- logins: Stores user account details with salted password hashes.
 
 # 5. Routes
 
 The application defines several routes for different functionalities:
 
-- /: Submit form: Route for submitting translation job information.
+- /: Home page with options to sign up, log in, or book without an account.
+- /booking: Route for submitting translation job information.
+- /signup: Route for creating a user account.
+- /user_login: Route for user login.
+- /user_logout: Route to log out a user.
 - /submit: Route for submitting translation job requests.
 - /billing: Route for submitting billing information.
 - /login: Route for authentication to access and accept translation job requests.

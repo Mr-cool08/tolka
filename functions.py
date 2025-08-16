@@ -6,7 +6,7 @@ def generate_secret_key():
     return secrets.token_hex(32)
 def booking_exists(name, email, phone, language, time_start, time_end):
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Check if the booking already exists in the database
