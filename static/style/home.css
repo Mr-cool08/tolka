@@ -38,3 +38,15 @@
     border-radius: 8px;
     margin-bottom: 20px;
 }
+
+@media (max-width: 600px) {
+    .home-container {
+        margin: 20px auto;
+        width: 90%;
+        padding: 15px;
+    }
+
+    .home-options a {
+        width: 100%;
+    }
+}
