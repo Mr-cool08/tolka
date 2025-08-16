@@ -9,6 +9,7 @@ Faktureringsinformation
 {% block content %}
 <h1>Faktureringsinformation</h1>
 <form method="post" action="/billing">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   
   <label class="container" for="avtals_kund">Är du en avtalskund?
 
@@ -66,9 +67,7 @@ Faktureringsinformation
   }
   
   // Initial invocation to set the initial state based on the checkbox state
-  toggleFields();
-  </script>
+    toggleFields();
+    </script>
 
-  
-</form>
-  {% endblock %}  
+{% endblock %}

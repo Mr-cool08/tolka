@@ -6,6 +6,7 @@
 {% block content %}
 <h1>Registrera konto</h1>
 <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <label for="name">Namn:</label>
   <input type="text" id="name" name="name" required><br><br>
   <label for="phone">Telefonnummer:</label>
