@@ -1,5 +1,4 @@
 import sqlite3
-import os
 import secrets
 def generate_secret_key():
     # Generate a random 32-byte key using secrets module
