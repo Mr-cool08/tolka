@@ -9,10 +9,16 @@ def client():
         yield client
 
 
-def test_index_route(client):
+def test_home_route(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"Bokning" in response.data
+    assert "Välkommen" in response.get_data(as_text=True)
+
+
+def test_booking_route(client):
+    response = client.get("/booking")
+    assert response.status_code == 200
+    assert "Bokning av översättare" in response.get_data(as_text=True)
 
 
 def test_login_route(client):
