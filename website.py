@@ -344,47 +344,6 @@ def submit():
     )
     return redirect('/billing')
 
-    else:
-        # Retrieve the form data
-        name = request.form['name']
-        email = request.form['email']
-        language = request.form['language']
-        time_start_str = request.form['starttime']
-        time_end_minutes = int(request.form['endtime'])  # Retrieve the selected end time in minutes
-        phone = request.form['phone']
-        time_start = datetime.strptime(time_start_str, '%Y-%m-%dT%H:%M')
-        
-        # Calculate the end time based on the selected minutes
-        time_end = time_start + timedelta(minutes=time_end_minutes)
-        
-        time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
-        time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
-        
-        # Check if the booking already exists in the database using trimmed time strings
-        if functions.booking_exists(
-            name,
-            email,
-            phone,
-            language,
-            time_start_str_trimmed,
-            time_end_str_trimmed,
-        ):
-            return render_template(
-                'error.html',
-                message='This booking already exists.',
-                error_name='409',
-            )
-
-        # Store the form data in the session
-        session['name'] = name
-        session['email'] = email
-        session['phone'] = phone
-        session['language'] = language
-        session['time_start'] = time_start_str_trimmed
-        session['time_end'] = time_end_str_trimmed
-
-        return redirect('/billing')
-
 
 @app.route('/billing', methods=['GET', 'POST'])
 def billing():
