@@ -8,43 +8,45 @@
 {% endblock %}
 {% block content %}
 {% if bookings is defined %}
-<img src="{{ url_for('static', filename='images/20250816_2214_Tolk och klient_simple_compose_01k2t86s2me5f9xgbccfde7gcg.png') }}" alt="Tolkar" class="home-hero">
-<div class="dashboard-container">
-  <h1>Dina bokningar</h1>
-  {% if bookings %}
-  <div class="table-container">
-    <table class="dashboard-table">
-      <tr>
-        <th>Språk</th>
-        <th>Starttid</th>
-        <th>Sluttid</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-      {% for b in bookings %}
-      <tr>
-        <td>{{ b[1] }}</td>
-        <td>{{ b[2] }}</td>
-        <td>{{ b[3] }}</td>
-        <td class="status status-{{ b[4] }}">{{ b[4] }}</td>
-        <td>
-          {% if b[4] == 'pending' %}
-          <form method="post" action="{{ url_for('cancel_booking', booking_id=b[0]) }}">
-            <button type="submit" class="cancel-button">Avbryt</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-  </div>
-  {% else %}
-  <p>Du har inga bokningar.</p>
-  {% endif %}
-  <div class="dashboard-actions">
-    <a href="{{ url_for('index') }}" class="dashboard-button">Gör ny bokning</a>
-    <a href="{{ url_for('logout') }}" class="dashboard-button">Logga ut</a>
-    <a href="{{ removal_link }}" class="dashboard-button">Ta bort konto</a>
+<div class="home-hero-container">
+  <img src="{{ url_for('static', filename='images/20250816_2214_Tolk och klient_simple_compose_01k2t86s2me5f9xgbccfde7gcg.png') }}" alt="Tolkar" class="home-hero">
+  <div class="dashboard-container">
+    <h1>Dina bokningar</h1>
+    {% if bookings %}
+    <div class="table-container">
+      <table class="dashboard-table">
+        <tr>
+          <th>Språk</th>
+          <th>Starttid</th>
+          <th>Sluttid</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+        {% for b in bookings %}
+        <tr>
+          <td>{{ b[1] }}</td>
+          <td>{{ b[2] }}</td>
+          <td>{{ b[3] }}</td>
+          <td class="status status-{{ b[4] }}">{{ b[4] }}</td>
+          <td>
+            {% if b[4] == 'pending' %}
+            <form method="post" action="{{ url_for('cancel_booking', booking_id=b[0]) }}">
+              <button type="submit" class="cancel-button">Avbryt</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% else %}
+    <p>Du har inga bokningar.</p>
+    {% endif %}
+    <div class="dashboard-actions">
+      <a href="{{ url_for('index') }}" class="dashboard-button">Gör ny bokning</a>
+      <a href="{{ url_for('logout') }}" class="dashboard-button">Logga ut</a>
+      <a href="{{ removal_link }}" class="dashboard-button">Ta bort konto</a>
+    </div>
   </div>
 </div>
 {% else %}
