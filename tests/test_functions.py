@@ -4,7 +4,7 @@ import functions
 
 
 def setup_db(tmp_path):
-    db_path = tmp_path / 'bookings.db'
+    db_path = tmp_path / 'database.db'
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute(
