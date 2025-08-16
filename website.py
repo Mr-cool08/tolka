@@ -120,7 +120,7 @@ def accept_job(job_id):
         smtp_username = os.getenv("email")# Getting the email for the sender
         smtp_password = os.getenv('Email_password') # Getting the password for the sender
         msg['Bcc'] = smtp_username # Adding the secret email to send to self.
-        smtp_server = os.getenv("smpt_server_address")# Connect to the SMTP server
+        smtp_server = os.getenv("smtp_server_address")  # Connect to the SMTP server
         smtp_port = os.getenv("smtp_port")# Connect to the SMTP server
         recipient_email = session.get('tolkar_email', '')  # Retrieve the recipient email from the session
 
@@ -160,7 +160,7 @@ def accept_job(job_id):
         smtp_username = os.getenv("email")# Getting the email for the sender
         smtp_password = os.getenv('Email_password')# Getting the password for the sender
         msg['Bcc'] = smtp_username # Adding the secret email to send to self.
-        smtp_server = os.getenv("smpt_server_address")# Connect to the SMTP server
+        smtp_server = os.getenv("smtp_server_address")  # Connect to the SMTP server
         smtp_port = os.getenv("smtp_port")# Connect to the SMTP server
         recipient_email = job_data[1] # Retrieve the recipient email from the database
         with smtplib.SMTP(smtp_server, smtp_port) as server: # Sending the email
@@ -194,9 +194,20 @@ def submit():
         time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
         time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
         
-        # Check if the booking already exists in the database
-        if functions.booking_exists(name, email, phone, language, time_start, time_end):
-            return render_template('error.html', message='This booking already exists.', error_name='409')
+        # Check if the booking already exists in the database using trimmed time strings
+        if functions.booking_exists(
+            name,
+            email,
+            phone,
+            language,
+            time_start_str_trimmed,
+            time_end_str_trimmed,
+        ):
+            return render_template(
+                'error.html',
+                message='This booking already exists.',
+                error_name='409',
+            )
 
         # Store the form data in the session
         session['name'] = name
@@ -281,16 +292,6 @@ def confirmation():
             return redirect("https://www.tolkar.se/bekraftelse/")
         else:
             return "invalid request"
-        """""
-        # Insert the booking details into the database, including the billing information
-        cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
-        conn.commit()
-
-        # Close the database connection
-        conn.close()
-        """""
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
