@@ -1,6 +1,14 @@
+.home-hero-container {
+    position: relative;
+}
+
 .home-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     max-width: 500px;
-    margin: 40px auto;
+    width: 90%;
     text-align: center;
     background: rgba(255, 255, 255, 0.8);
     padding: 20px;
@@ -37,11 +45,11 @@
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 20px;
+    display: block;
 }
 
 @media (max-width: 600px) {
     .home-container {
-        margin: 20px auto;
         width: 90%;
         padding: 15px;
     }
