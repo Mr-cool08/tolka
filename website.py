@@ -95,7 +95,8 @@ def signup():
         email_billing_address = request.form.get('email_billing_address', '')
         pwd_hash, salt = functions.hash_password(password)
         email_hash, email_salt = functions.hash_email(email)
-        totp_secret = pyotp.random_base32()
+        enable_2fa = bool(request.form.get('enable_2fa'))
+        totp_secret = pyotp.random_base32() if enable_2fa else None
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
         cursor.execute("SELECT email, email_salt FROM logins")
@@ -126,10 +127,14 @@ def signup():
         user_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        session['pending_user_id'] = user_id
-        session['pending_user_email'] = email
-        session['new_totp_secret'] = totp_secret
-        return redirect(url_for('two_factor'))
+        if enable_2fa:
+            session['pending_user_id'] = user_id
+            session['pending_user_email'] = email
+            session['new_totp_secret'] = totp_secret
+            return redirect(url_for('two_factor'))
+        session['user_id'] = user_id
+        session['user_email'] = email
+        return redirect(url_for('home'))
     return render_template('signup.html')
 
 
@@ -140,14 +145,18 @@ def user_login():
         password = request.form['password']
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email, email_salt, password_hash, salt FROM logins")
+        cursor.execute("SELECT id, email, email_salt, password_hash, salt, totp_secret FROM logins")
         for row in cursor.fetchall():
-            user_id, email_hash, email_salt, pwd_hash, pwd_salt = row
+            user_id, email_hash, email_salt, pwd_hash, pwd_salt, totp_secret = row
             if functions.verify_email(email, email_hash, email_salt) and functions.verify_password(password, pwd_hash, pwd_salt):
                 conn.close()
-                session['pending_user_id'] = user_id
-                session['pending_user_email'] = email
-                return redirect(url_for('two_factor'))
+                if totp_secret:
+                    session['pending_user_id'] = user_id
+                    session['pending_user_email'] = email
+                    return redirect(url_for('two_factor'))
+                session['user_id'] = user_id
+                session['user_email'] = email
+                return redirect(url_for('home'))
         conn.close()
         return render_template('user_login.html', error='Invalid credentials')
     return render_template('user_login.html')
