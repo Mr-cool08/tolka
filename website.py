@@ -10,6 +10,8 @@ import time
 import functions
 from itertools import combinations
 import subprocess
+import pyotp
+import urllib.parse
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",
@@ -53,8 +55,24 @@ def home():
             (user_email,),
         )
         bookings = cursor.fetchall()
+        cursor.execute("SELECT email FROM logins WHERE id = ?", (session['user_id'],))
+        row = cursor.fetchone()
+        hashed_email = row[0] if row else ''
         conn.close()
-        return render_template('home.html', bookings=bookings)
+        message = (
+            "Hello,\n\n"
+            "Please remove my account from Tolkar.se.\n"
+            f"Email hash: {hashed_email}\n\n"
+            "Regards,\n"
+        )
+        body = urllib.parse.quote(message)
+        removal_link = (
+            "mailto:placeholder@tolkar.se"
+            f"?subject=Account%20Deletion%20Request&body={body}"
+        )
+        return render_template(
+            'home.html', bookings=bookings, removal_link=removal_link
+        )
     return render_template('home.html')
 
 
@@ -94,6 +112,8 @@ def signup():
         email_billing_address = request.form.get('email_billing_address', '')
         pwd_hash, salt = functions.hash_password(password)
         email_hash, email_salt = functions.hash_email(email)
+        enable_2fa = bool(request.form.get('enable_2fa'))
+        totp_secret = pyotp.random_base32() if enable_2fa else None
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
         cursor.execute("SELECT email, email_salt FROM logins")
@@ -105,8 +125,8 @@ def signup():
             """
             INSERT INTO logins (
                 name, email, email_salt, phone, password_hash, salt,
-                organization_number, billing_address, email_billing_address
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                organization_number, billing_address, email_billing_address, totp_secret
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 name,
@@ -118,11 +138,17 @@ def signup():
                 organization_number,
                 billing_address,
                 email_billing_address,
+                totp_secret,
             ),
         )
         user_id = cursor.lastrowid
         conn.commit()
         conn.close()
+        if enable_2fa:
+            session['pending_user_id'] = user_id
+            session['pending_user_email'] = email
+            session['new_totp_secret'] = totp_secret
+            return redirect(url_for('two_factor'))
         session['user_id'] = user_id
         session['user_email'] = email
         return redirect(url_for('home'))
@@ -136,17 +162,46 @@ def user_login():
         password = request.form['password']
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email, email_salt, password_hash, salt FROM logins")
+        cursor.execute("SELECT id, email, email_salt, password_hash, salt, totp_secret FROM logins")
         for row in cursor.fetchall():
-            user_id, email_hash, email_salt, pwd_hash, pwd_salt = row
+            user_id, email_hash, email_salt, pwd_hash, pwd_salt, totp_secret = row
             if functions.verify_email(email, email_hash, email_salt) and functions.verify_password(password, pwd_hash, pwd_salt):
                 conn.close()
+                if totp_secret:
+                    session['pending_user_id'] = user_id
+                    session['pending_user_email'] = email
+                    return redirect(url_for('two_factor'))
                 session['user_id'] = user_id
                 session['user_email'] = email
                 return redirect(url_for('home'))
         conn.close()
         return render_template('user_login.html', error='Invalid credentials')
     return render_template('user_login.html')
+
+@app.route('/two_factor', methods=['GET', 'POST'])
+def two_factor():
+    if 'pending_user_id' not in session:
+        return redirect(url_for('user_login'))
+    secret = session.get('new_totp_secret')
+    display_secret = secret
+    if not secret:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT totp_secret FROM logins WHERE id = ?', (session['pending_user_id'],))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            secret = row[0]
+    if request.method == 'POST':
+        token = request.form['token']
+        totp = pyotp.TOTP(secret)
+        if totp.verify(token):
+            session['user_id'] = session.pop('pending_user_id')
+            session['user_email'] = session.pop('pending_user_email')
+            session.pop('new_totp_secret', None)
+            return redirect(url_for('home'))
+        return render_template('verify_2fa.html', error='Invalid code', secret=display_secret)
+    return render_template('verify_2fa.html', secret=display_secret)
 
 @app.route('/health')
 def health():
@@ -296,8 +351,8 @@ def cancel_booking(booking_id):
 def submit():
     if request.method == 'GET':
         if session.get('user_id'):
-            return redirect('/confirmation')
-        return redirect('/billing')
+            return redirect(url_for('confirmation'))
+        return redirect(url_for('billing'))
     if session.get("submitted"):
         return render_template("error.html", message="You have already submitted")
 
@@ -339,7 +394,7 @@ def submit():
                 'submitted': True,
             }
         )
-        return redirect('/confirmation')
+        return redirect(url_for('confirmation'))
 
     name = request.form['name']
     email = request.form['email']
@@ -356,7 +411,7 @@ def submit():
             'time_end': time_end_str_trimmed,
         }
     )
-    return redirect('/billing')
+    return redirect(url_for('billing'))
 
 
 @app.route('/billing', methods=['GET', 'POST'])
@@ -464,7 +519,7 @@ def login():
             # Store the email in the session
             session['tolkar_email'] = request.form['email']
             session['authenticated'] = True
-            return redirect('/jobs')
+            return redirect(url_for('get_jobs'))
         else:
             return render_template('login.html', error='Invalid password')
     return render_template('login.html')
@@ -518,7 +573,8 @@ if __name__ == '__main__':
                     salt TEXT NOT NULL,
                     organization_number TEXT,
                     billing_address TEXT,
-                    email_billing_address TEXT)''')
+                    email_billing_address TEXT,
+                    totp_secret TEXT)''')
 
     cursor.execute("PRAGMA table_info(logins)")
     login_columns = [info[1] for info in cursor.fetchall()]
@@ -527,6 +583,7 @@ if __name__ == '__main__':
         'billing_address',
         'email_billing_address',
         'email_salt',
+        'totp_secret',
     ]
     for col in extra_cols:
         if col not in login_columns:

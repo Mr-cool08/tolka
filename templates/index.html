@@ -10,7 +10,7 @@ Bokning av översättare
 {% block content %}
     <h1>Bokning av översättare</h1>
     
-    <form action="/submit" method="post">
+    <form action="{{ url_for('submit') }}" method="post">
         {% if not logged_in %}
         <label for="name">Fullständigt namn:</label>
         <input type="text" id="name" name="name" value="{{ user_name }}" required><br><br>

@@ -36,8 +36,8 @@
 {% endblock %}
 
 {% block content %}
-    <a href="/logout">  
-        <button class="logout-button" href="/logout">Logout</button>
+    <a href="{{ url_for('logout') }}">
+        <button class="logout-button">Logout</button>
     </a>
     <h1>Available Jobs</h1>
 
