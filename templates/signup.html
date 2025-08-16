@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Skapa konto{% endblock %}
+{% block content %}
+<h1>Skapa konto</h1>
+<form method="post">
+    <label for="username">Namn:</label>
+    <input type="text" id="username" name="username" required><br><br>
+    <label for="email">E-post:</label>
+    <input type="email" id="email" name="email" required><br><br>
+    <label for="phone">Telefon:</label>
+    <input type="tel" id="phone" name="phone" required><br><br>
+    <label for="password">Lösenord:</label>
+    <input type="password" id="password" name="password" required><br><br>
+    <input type="submit" value="Skapa konto">
+</form>
+{% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
+{% endblock %}

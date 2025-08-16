@@ -12,13 +12,25 @@ Bokning av översättare
     
     <form action="/submit" method="post">
         <label for="name">Fullständigt namn:</label>
+        {% if session.get('user_id') %}
+        <input type="text" id="name" name="name" value="{{ session['name'] }}" readonly required><br><br>
+        {% else %}
         <input type="text" id="name" name="name" required><br><br>
-    
+        {% endif %}
+
         <label for="phone">Telefonnummer:</label>
+        {% if session.get('user_id') %}
+        <input type="tel" id="phone" name="phone" value="{{ session['phone'] }}" readonly required><br><br>
+        {% else %}
         <input type="tel" id="phone" name="phone" required><br><br>
-    
+        {% endif %}
+
         <label for="email">E-postadress:</label>
+        {% if session.get('user_id') %}
+        <input type="email" id="email" name="email" value="{{ session['email'] }}" readonly required><br><br>
+        {% else %}
         <input type="email" id="email" name="email" required><br><br>
+        {% endif %}
     
         <label for="start-time">Start Tid:</label>
         <input type="datetime-local" id="start-time" name="starttime" required><br><br>

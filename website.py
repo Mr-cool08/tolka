@@ -32,15 +32,64 @@ app.secret_key = functions.generate_secret_key()
 
 # Define the password for accessing the /jobs route
 PASSWORD = os.getenv('password')
+
 @app.route('/logout')
 def logout():
     session.pop('authenticated', None)
-    return redirect(url_for('login'))
-    
+    session.pop('user_id', None)
+    session.pop('name', None)
+    session.pop('email', None)
+    session.pop('phone', None)
+    return redirect(url_for('home'))
+
 @app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/booking')
 def index():
-    
     return render_template('index.html', combo_list=languages)
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        phone = request.form['phone']
+        password = request.form['password']
+        salt, hashed = functions.hash_password(password)
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO logins (username, email, phone, password_hash, salt) VALUES (?, ?, ?, ?, ?)",
+                       (username, email, phone, hashed, salt))
+        conn.commit()
+        user_id = cursor.lastrowid
+        conn.close()
+        session['user_id'] = user_id
+        session['name'] = username
+        session['email'] = email
+        session['phone'] = phone
+        return redirect(url_for('index'))
+    return render_template('signup.html')
+
+@app.route('/user_login', methods=['GET', 'POST'])
+def user_login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, email, phone, password_hash, salt FROM logins WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        conn.close()
+        if user and functions.verify_password(password, user[5], user[4]):
+            session['user_id'] = user[0]
+            session['name'] = user[1]
+            session['email'] = user[2]
+            session['phone'] = user[3]
+            return redirect(url_for('index'))
+        return render_template('user_login.html', error='Invalid credentials')
+    return render_template('user_login.html')
 
 @app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
@@ -48,7 +97,7 @@ def get_jobs():
         return render_template('login.html')
 
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Retrieve jobs from the database
@@ -71,7 +120,7 @@ def accept_job(job_id):
         return render_template('login.html')
 
     # Connect to the database
-    conn = sqlite3.connect('bookings.db')
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     # Retrieve job information from the database
@@ -267,7 +316,7 @@ def confirmation():
             time_start = session.get('time_start')
             time_end = session.get('time_end')
             phone = session.get('phone')
-            conn = sqlite3.connect('bookings.db')
+            conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
             cursor.execute(
             "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -304,16 +353,15 @@ def login():
         else:
             return render_template('login.html', error='Invalid password')
     return render_template('login.html')
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('error.html', message='Detta var inte vad du letade efter.', error_name='404')
+
 if __name__ == '__main__':
-    # Connect to the database and create the 'bookings' table if it doesn't exist
-    conn = sqlite3.connect('bookings.db')
+    # Connect to the database and create required tables if they don't exist
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    # Create the 'bookings' table if it doesn't exist
     cursor.execute('''CREATE TABLE IF NOT EXISTS bookings
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
@@ -329,7 +377,6 @@ if __name__ == '__main__':
                     avtalskund_marking TEXT,
                     reference TEXT)''')
 
-    # Create the 'taken_bookings' table if it doesn't exist
     cursor.execute('''CREATE TABLE IF NOT EXISTS taken_bookings
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
@@ -344,6 +391,14 @@ if __name__ == '__main__':
                     marking TEXT,
                     AVTALSKUND_MARKING TEXT,
                     reference TEXT)''')
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS logins
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    phone TEXT NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    salt TEXT NOT NULL)''')
 
     conn.close()
     app.run(port=8080, host="0.0.0.0", debug=True)
