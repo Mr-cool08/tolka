@@ -11,6 +11,7 @@ import functions
 from itertools import combinations
 import subprocess
 import pyotp
+import urllib.parse
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",
@@ -54,8 +55,19 @@ def home():
             (user_email,),
         )
         bookings = cursor.fetchall()
+        cursor.execute("SELECT email FROM logins WHERE id = ?", (session['user_id'],))
+        row = cursor.fetchone()
+        hashed_email = row[0] if row else ''
         conn.close()
-        return render_template('home.html', bookings=bookings)
+        body = urllib.parse.quote_plus(
+            f"Please remove my account. Email hash: {hashed_email}"
+        )
+        removal_link = (
+            f"mailto:placeholder@tolkar.se?subject=Remove%20account&body={body}"
+        )
+        return render_template(
+            'home.html', bookings=bookings, removal_link=removal_link
+        )
     return render_template('home.html')
 
 
