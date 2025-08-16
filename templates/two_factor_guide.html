@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}2FA Setup Guide{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/auth.css') }}">
+{% endblock %}
+{% block content %}
+<h1>Set up Two-Factor Authentication (2FA)</h1>
+<ol>
+  <li><strong>Start on the service you want to secure.</strong> Open its settings and find "Two-Factor Authentication" or similar.</li>
+  <li><strong>Select "Authenticator app".</strong></li>
+  <li><strong>Scan the QR code or enter the key.</strong> In your authenticator app tap "+" to add a new account.</li>
+  <li><strong>Enter the 6-digit code.</strong> Type the code from the app back into the website.</li>
+  <li><strong>Save your backup codes.</strong></li>
+</ol>
+<h2>Popular Authenticator Apps</h2>
+<ul>
+  <li><strong>Google Authenticator:</strong> Tap the "+" button then "Scan a QR code".</li>
+  <li><strong>Microsoft Authenticator:</strong> Sign in if needed, tap "Add account", choose "Other".</li>
+  <li><strong>Authy:</strong> Create a free account to sync codes across devices.</li>
+  <li><strong>1Password:</strong> Store your 2FA codes with your passwords.</li>
+</ul>
+<h2>Examples</h2>
+<h3>Google Account</h3>
+<ol>
+  <li>Visit <code>myaccount.google.com/security</code>.</li>
+  <li>Under "Signing in to Google" choose "2-Step Verification" &gt; "Authenticator app".</li>
+  <li>Scan the QR code and enter the 6-digit code.</li>
+</ol>
+<h3>Facebook</h3>
+<ol>
+  <li>Open Settings &gt; Password and Security.</li>
+  <li>Under "Two-factor authentication" choose "Authentication App".</li>
+  <li>Scan the QR code and confirm with the app code.</li>
+</ol>
+<h3>Instagram</h3>
+<ol>
+  <li>Go to your profile &gt; Menu &gt; Settings and privacy &gt; Accounts Center.</li>
+  <li>Select Password and security &gt; Two-factor authentication &gt; Authentication app.</li>
+  <li>Copy or scan the code, then enter the 6-digit code to finish.</li>
+</ol>
+<p>Codes refresh every 30 seconds. Transfer your authenticator app before changing phones and keep backup codes safe.</p>
+{% endblock %}

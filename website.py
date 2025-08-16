@@ -185,6 +185,11 @@ def two_factor():
         return render_template('verify_2fa.html', error='Invalid code', secret=secret)
     return render_template('verify_2fa.html', secret=secret)
 
+
+@app.route('/2fa-guide')
+def two_factor_guide():
+    return render_template('two_factor_guide.html')
+
 @app.route('/health')
 def health():
     """Health check endpoint used by deployment platforms."""

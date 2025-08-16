@@ -37,6 +37,12 @@ def test_health_route(client):
     assert "OK" in response.get_data(as_text=True)
 
 
+def test_two_factor_guide_route(client):
+    response = client.get("/2fa-guide")
+    assert response.status_code == 200
+    assert "Two-Factor Authentication" in response.get_data(as_text=True)
+
+
 def test_404_route(client):
     response = client.get("/not-found")
     assert response.status_code == 404
