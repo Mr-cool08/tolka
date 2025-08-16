@@ -1,7 +1,11 @@
+
 .dashboard-container {
     max-width: 800px;
     margin: 20px auto;
-    padding: 0 10px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table-container {
@@ -12,6 +16,7 @@
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
+    background-color: #fafafa;
 }
 
 .dashboard-table th,
@@ -23,7 +28,17 @@
 
 .dashboard-table th {
     background-color: #f2f2f2;
+    text-align: left;
 }
+
+.dashboard-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.dashboard-table tr:hover {
+    background-color: #f1f1f1;
+}
+
 
 .cancel-button {
     padding: 5px 10px;
@@ -32,6 +47,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .cancel-button:hover {
@@ -40,10 +56,12 @@
 
 .status-pending {
     color: #e67e22;
+    font-weight: bold;
 }
 
 .status-accepted {
     color: #27ae60;
+    font-weight: bold;
 }
 
 @media (max-width: 600px) {

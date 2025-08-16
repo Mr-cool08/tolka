@@ -439,6 +439,8 @@ def confirmation():
             conn.close()
             time.sleep(1)
             session['submitted'] = False
+            if session.get('user_id'):
+                return redirect(url_for('home'))
             return redirect("https://www.tolkar.se/bekraftelse/")
         else:
             return "invalid request"
