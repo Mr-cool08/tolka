@@ -7,7 +7,7 @@
 {% endif %}
 {% endblock %}
 {% block content %}
-<img src="https://images.unsplash.com/photo-1521790362199-ea6c5fc9a31a?auto=format&fit=crop&w=1350&q=80" alt="Tolkar" class="home-hero">
+<img src="{{ url_for('static', filename='images/20250816_2214_Tolk och klient_simple_compose_01k2t86s2me5f9xgbccfde7gcg.png') }}" alt="Tolkar" class="home-hero">
 {% if bookings is defined %}
 <div class="dashboard-container">
   <h1>Dina bokningar</h1>
