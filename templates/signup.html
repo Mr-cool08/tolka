@@ -5,6 +5,7 @@
 {% endblock %}
 {% block content %}
 <h1>Registrera konto</h1>
+{% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
 <form method="post">
   <label for="name">Namn:</label>
   <input type="text" id="name" name="name" required><br><br>
