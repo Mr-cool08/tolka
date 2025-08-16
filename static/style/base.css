@@ -55,7 +55,13 @@ input[type="submit"]:hover {
 p {
     color: #333;
     margin-top: 10px;
-    
+
+}
+
+@media (max-width: 600px) {
+    form {
+        padding: 15px;
+    }
 }
 
 
