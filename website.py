@@ -500,5 +500,5 @@ if __name__ == '__main__':
             cursor.execute(f"ALTER TABLE logins ADD COLUMN {col} TEXT")
 
     conn.close()
-    port = int(os.environ.get("PORT", 8080))
-    app.run(port=port, host="0.0.0.0", debug=True)
+    port = int(os.environ.get("PORT", 80))
+    app.run(port=port, host="0.0.0.0", debug=False)
