@@ -51,3 +51,13 @@ def test_booking_exists_false(tmp_path, monkeypatch):
     assert not functions.booking_exists(
         "Bob", "bob@example.com", "456", "Swedish", "10", "11"
     )
+
+
+def test_hash_password_and_verify():
+    password = "secret"
+    pwd_hash, salt = functions.hash_password(password)
+    assert isinstance(pwd_hash, str) and isinstance(salt, str)
+    assert len(pwd_hash) == 64
+    assert len(salt) == 32
+    assert functions.verify_password(password, pwd_hash, salt)
+    assert not functions.verify_password("wrong", pwd_hash, salt)

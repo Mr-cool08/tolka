@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 import website
 
@@ -9,25 +10,31 @@ def client():
         yield client
 
 
-def test_index_route(client):
+def test_home_route(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"V\xc3\xa4lkommen" in response.data
+    assert "Välkommen" in response.get_data(as_text=True)
+
+
+def test_booking_route(client):
+    response = client.get("/booking")
+    assert response.status_code == 200
+    assert "Bokning av översättare" in response.get_data(as_text=True)
 
 
 def test_login_route(client):
     response = client.get("/login")
     assert response.status_code == 200
-    assert b"Login" in response.data
+    assert "Login" in response.get_data(as_text=True)
 
 
 def test_health_route(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert b"OK" in response.data
+    assert "OK" in response.get_data(as_text=True)
 
 
 def test_404_route(client):
     response = client.get("/not-found")
     assert response.status_code == 404
-    assert b"Detta var inte vad du letade efter." in response.data
+    assert "Detta var inte vad du letade efter." in response.get_data(as_text=True)
