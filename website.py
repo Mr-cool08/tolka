@@ -166,6 +166,7 @@ def two_factor():
     if 'pending_user_id' not in session:
         return redirect(url_for('user_login'))
     secret = session.get('new_totp_secret')
+    display_secret = secret
     if not secret:
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -182,8 +183,8 @@ def two_factor():
             session['user_email'] = session.pop('pending_user_email')
             session.pop('new_totp_secret', None)
             return redirect(url_for('home'))
-        return render_template('verify_2fa.html', error='Invalid code', secret=secret)
-    return render_template('verify_2fa.html', secret=secret)
+        return render_template('verify_2fa.html', error='Invalid code', secret=display_secret)
+    return render_template('verify_2fa.html', secret=display_secret)
 
 
 @app.route('/2fa-guide')
