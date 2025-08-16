@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Hem{% endblock %}
+{% block content %}
+<h1>Välkommen</h1>
+<p>Välj ett alternativ:</p>
+<ul>
+  <li><a href="{{ url_for('signup') }}">Skapa konto</a></li>
+  <li><a href="{{ url_for('user_login') }}">Logga in</a></li>
+  <li><a href="{{ url_for('index') }}">Boka utan konto</a></li>
+</ul>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Registrera{% endblock %}
+{% block content %}
+<h1>Registrera konto</h1>
+<form method="post">
+  <label for="name">Namn:</label>
+  <input type="text" id="name" name="name" required><br><br>
+  <label for="phone">Telefonnummer:</label>
+  <input type="tel" id="phone" name="phone" required><br><br>
+  <label for="email">E-post:</label>
+  <input type="email" id="email" name="email" required><br><br>
+  <label for="password">Lösenord:</label>
+  <input type="password" id="password" name="password" required><br><br>
+  <input type="submit" value="Skapa konto">
+</form>
+{% endblock %}
