@@ -53,3 +53,21 @@ def verify_email(email, stored_hash, salt):
     """Verify an email against the stored hash and salt."""
     new_hash, _ = hash_email(email, salt)
     return new_hash == stored_hash
+
+def ensure_test_user(email="test@example.com", password="Masbo124"):
+    """Create a default test user if it does not already exist."""
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT email, email_salt FROM logins")
+    for email_hash, email_salt in cursor.fetchall():
+        if verify_email(email, email_hash, email_salt):
+            conn.close()
+            return
+    pwd_hash, pwd_salt = hash_password(password)
+    email_hash, email_salt = hash_email(email)
+    cursor.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ("Test User", email_hash, email_salt, "0000000000", pwd_hash, pwd_salt, "", "", ""),
+    )
+    conn.commit()
+    conn.close()
