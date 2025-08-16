@@ -5,7 +5,6 @@
 {% endblock %}
 {% block content %}
 <h1>Tvåfaktorsautentisering</h1>
-<p><a href="{{ url_for('two_factor_guide') }}">Behöver du hjälp med autentiseringsappen?</a></p>
 {% if secret %}
 <p>Skanna eller lägg till denna nyckel i din autentiseringsapp:</p>
 <p><strong>{{ secret }}</strong></p>
@@ -16,4 +15,69 @@
   <input type="text" id="token" name="token" required>
   <input type="submit" value="Verifiera">
 </form>
+
+<button id="toggle-2fa-help">Need help adding this code?</button>
+
+<div id="two-fa-help" style="display:none; margin-top:1rem;">
+  <h2>How to Add Our App to Your Authenticator</h2>
+
+  <ol>
+    <li>Download or open your preferred authenticator app.</li>
+    <li>On this page, either scan our QR code with your phone’s camera or manually enter the code we provide.</li>
+    <li>Once the app shows a 6-digit code, type that code into our “Verify” field and submit.</li>
+    <li>Keep the backup codes we give you in a safe place.</li>
+    <li>The code changes every 30 seconds.</li>
+  </ol>
+
+  <hr>
+
+  <details>
+    <summary><strong>Google Authenticator</strong></summary>
+    <ol>
+      <li>Open Google Authenticator.</li>
+      <li>Tap the <strong>“+”</strong> button (bottom right) &gt; <strong>“Scan a QR code”</strong>.</li>
+      <li>Point your camera at our QR code. (Or choose <strong>“Enter a setup key”</strong> to type the code manually.)</li>
+      <li>Google Authenticator will immediately show a code. Enter that code into our “Verify” box.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary><strong>Authy</strong></summary>
+    <ol>
+      <li>Open Authy.</li>
+      <li>Tap the <strong>“+ Add Account”</strong> button.</li>
+      <li>Select <strong>“Scan QR Code”</strong> and scan our QR, or tap <strong>“Enter key manually”</strong> to type the code.</li>
+      <li>Authy will label the account automatically; tap <strong>Save</strong>.</li>
+      <li>Copy the code shown in Authy into our “Verify” field.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary><strong>Microsoft Authenticator</strong></summary>
+    <ol>
+      <li>Open Microsoft Authenticator.</li>
+      <li>Tap the <strong>“+”</strong> button &gt; <strong>“Other (Google, Facebook, etc.)”</strong>.</li>
+      <li>Scan our QR code, or choose <strong>“Or enter code manually”</strong> to type the key.</li>
+      <li>Microsoft Authenticator will display a code—enter it into our “Verify” field.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary><strong>1Password</strong></summary>
+    <ol>
+      <li>Open 1Password and navigate to your “Our App” login item.</li>
+      <li>Click or tap <strong>“Add a one-time password”</strong>.</li>
+      <li>Choose <strong>“Scan QR code”</strong> (or enter the code manually).</li>
+      <li>1Password will start generating 6-digit codes for our app. Use the latest code in our “Verify” field.</li>
+    </ol>
+  </details>
+</div>
+
+<script>
+  document.getElementById('toggle-2fa-help')
+    .addEventListener('click', function () {
+      const help = document.getElementById('two-fa-help');
+      help.style.display = (help.style.display === 'none') ? 'block' : 'none';
+    });
+</script>
 {% endblock %}
