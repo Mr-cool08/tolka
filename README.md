@@ -1,54 +1,57 @@
-# Tolkar.se - Translation Service Web Application
+# Tolkar.se – Online Translation Booking
 
-Tolkar.se is a Flask-based web application for managing translation bookings.
-Visitors can submit translation jobs and registered users can review and accept
-pending jobs.  The project uses SQLite for storage and includes optional
-two-factor authentication for user logins.
+Tolkar.se is a web service that helps you book professional interpreters.  This
+guide explains how to use the site as a visitor or registered user.
 
-## Features
-- Submit translation job requests with billing details
-- User registration and login with PBKDF2-hashed passwords and emails
-- Optional TOTP-based two-factor authentication
-- View and accept pending jobs after authentication
-- `/health` endpoint for deployment health checks
+## How it works
 
-## Installation
-1. Clone the repository and create a virtual environment
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set required environment variables:
-   - `password` – shared secret to access job management routes
+1. **Create an account**  \
+   Visit `/signup` and register with your name, email and phone number.  You can
+   also add billing details for faster checkout and enable optional two‑factor
+   authentication (2FA) for extra security.
+2. **Sign in**  \
+   Log in at `/user_login`.  If you enabled 2FA, you'll be asked for a one‑time
+   code from your authenticator app.
+3. **Book a translator**  \
+   Go to `/booking` to choose languages, date, time and additional notes.  After
+   submitting the form you will be guided through billing and receive a
+   confirmation page.
+4. **Track your bookings**  \
+   The home page lists all your pending and accepted jobs.  You can cancel a
+   pending booking before it is accepted.
 
-## Usage
-Run the application locally:
+When a translation company accepts your job request, a confirmation email is
+sent to the address you provided during sign‑up.
+
+## Frequently asked questions
+
+**Do I need an account?**  \
+Yes. Accounts let us contact you about your bookings and keep your information
+secure.
+
+**How do I delete my account?**  \
+Use the “Remove my account” link on the home page. It will open an email draft
+requesting account deletion.
+
+**Is my data secure?**  \
+Passwords are stored with PBKDF2 hashing and 2FA is available for extra
+protection.
+
+## For developers
+
+If you want to run the site locally or contribute to development:
+
 ```bash
-export password=<your-password>
+pip install -r requirements.txt
+export password=<admin-password>
 python website.py
 ```
-The site will be available at <http://localhost:5000/>.
 
-## Testing
-Execute the test suite with:
+Run tests with:
+
 ```bash
 pytest
 ```
-
-## Database
-SQLite database `database.db` contains:
-- `bookings`: translation job details and billing information
-- `logins`: user accounts and optional TOTP secrets
-
-## Routes
-- `/` – home page and user bookings
-- `/booking` – submit a translation request
-- `/signup` – create a user account
-- `/user_login` – user login
-- `/two_factor` – verify 2FA token
-- `/jobs` – list pending jobs (requires `password`)
-- `/jobs/<id>` – accept a job
-- `/health` – health check endpoint
 
 ## License
 This project is licensed under the MIT License.
