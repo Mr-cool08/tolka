@@ -61,3 +61,13 @@ def test_hash_password_and_verify():
     assert len(salt) == 32
     assert functions.verify_password(password, pwd_hash, salt)
     assert not functions.verify_password("wrong", pwd_hash, salt)
+
+
+def test_hash_email_and_verify():
+    email = "user@example.com"
+    email_hash, salt = functions.hash_email(email)
+    assert isinstance(email_hash, str) and isinstance(salt, str)
+    assert len(email_hash) == 64
+    assert len(salt) == 32
+    assert functions.verify_email(email, email_hash, salt)
+    assert not functions.verify_email("other@example.com", email_hash, salt)

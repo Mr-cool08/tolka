@@ -36,3 +36,20 @@ def verify_password(password, stored_hash, salt):
     """Verify a password against the stored hash and salt."""
     new_hash, _ = hash_password(password, salt)
     return new_hash == stored_hash
+
+
+def hash_email(email, salt=None):
+    """Hash an email with PBKDF2 and return hex digest and salt."""
+    email = email.lower()
+    if salt is None:
+        salt = os.urandom(16)
+    else:
+        salt = bytes.fromhex(salt)
+    email_hash = hashlib.pbkdf2_hmac('sha256', email.encode(), salt, 100000)
+    return email_hash.hex(), salt.hex()
+
+
+def verify_email(email, stored_hash, salt):
+    """Verify an email against the stored hash and salt."""
+    new_hash, _ = hash_email(email, salt)
+    return new_hash == stored_hash

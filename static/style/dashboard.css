@@ -54,6 +54,32 @@
     background-color: #e74c3c;
 }
 
+/* Remove background and border from the table cell containing the cancel button */
+.dashboard-table td:last-child {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Buttons for dashboard actions */
+.dashboard-button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.dashboard-button:hover {
+    background-color: #2980b9;
+}
+
+.dashboard-actions {
+    margin-top: 20px;
+}
+
 .status-pending {
     color: #e67e22;
     font-weight: bold;

@@ -38,18 +38,16 @@ PASSWORD = os.getenv('password')
 def logout():
     session.pop('authenticated', None)
     session.pop('user_id', None)
+    session.pop('user_email', None)
     return redirect(url_for('home'))
 
 
 @app.route('/')
 def home():
     if session.get('user_id'):
+        user_email = session.get('user_email')
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT email FROM logins WHERE id = ?", (session['user_id'],)
-        )
-        user_email = cursor.fetchone()[0]
         cursor.execute(
             "SELECT id, language, time_start, time_end, status FROM bookings WHERE email = ?",
             (user_email,),
@@ -68,11 +66,12 @@ def index():
         logged_in = True
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT name, email, phone FROM logins WHERE id = ?', (session['user_id'],))
+        cursor.execute('SELECT name, phone FROM logins WHERE id = ?', (session['user_id'],))
         row = cursor.fetchone()
         conn.close()
         if row:
-            user_name, user_email, user_phone = row
+            user_name, user_phone = row
+            user_email = session.get('user_email', '')
     return render_template(
         'index.html',
         combo_list=languages,
@@ -94,18 +93,25 @@ def signup():
         billing_address = request.form.get('billing_address', '')
         email_billing_address = request.form.get('email_billing_address', '')
         pwd_hash, salt = functions.hash_password(password)
+        email_hash, email_salt = functions.hash_email(email)
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
+        cursor.execute("SELECT email, email_salt FROM logins")
+        for existing_hash, existing_salt in cursor.fetchall():
+            if functions.verify_email(email, existing_hash, existing_salt):
+                conn.close()
+                return render_template('signup.html', error='E-post används redan')
         cursor.execute(
             """
             INSERT INTO logins (
-                name, email, phone, password_hash, salt,
+                name, email, email_salt, phone, password_hash, salt,
                 organization_number, billing_address, email_billing_address
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 name,
-                email,
+                email_hash,
+                email_salt,
                 phone,
                 pwd_hash,
                 salt,
@@ -118,6 +124,7 @@ def signup():
         conn.commit()
         conn.close()
         session['user_id'] = user_id
+        session['user_email'] = email
         return redirect(url_for('home'))
     return render_template('signup.html')
 
@@ -129,12 +136,15 @@ def user_login():
         password = request.form['password']
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT id, password_hash, salt FROM logins WHERE email = ?", (email,))
-        row = cursor.fetchone()
+        cursor.execute("SELECT id, email, email_salt, password_hash, salt FROM logins")
+        for row in cursor.fetchall():
+            user_id, email_hash, email_salt, pwd_hash, pwd_salt = row
+            if functions.verify_email(email, email_hash, email_salt) and functions.verify_password(password, pwd_hash, pwd_salt):
+                conn.close()
+                session['user_id'] = user_id
+                session['user_email'] = email
+                return redirect(url_for('home'))
         conn.close()
-        if row and functions.verify_password(password, row[1], row[2]):
-            session['user_id'] = row[0]
-            return redirect(url_for('home'))
         return render_template('user_login.html', error='Invalid credentials')
     return render_template('user_login.html')
 
@@ -273,8 +283,7 @@ def cancel_booking(booking_id):
         return redirect(url_for('user_login'))
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT email FROM logins WHERE id = ?", (session['user_id'],))
-    user_email = cursor.fetchone()[0]
+    user_email = session.get('user_email')
     cursor.execute(
         "UPDATE bookings SET status='cancelled' WHERE id=? AND email=? AND status='pending'",
         (booking_id, user_email),
@@ -305,14 +314,15 @@ def submit():
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
         cursor.execute(
-            'SELECT name, email, phone, organization_number, billing_address, email_billing_address FROM logins WHERE id = ?',
+            'SELECT name, phone, organization_number, billing_address, email_billing_address FROM logins WHERE id = ?',
             (session['user_id'],),
         )
         row = cursor.fetchone()
         conn.close()
         if not row:
             return redirect(url_for('user_login'))
-        name, email, phone, organization_number, billing_address, email_billing_address = row
+        name, phone, organization_number, billing_address, email_billing_address = row
+        email = session.get('user_email')
         if functions.booking_exists(name, email, phone, language, time_start, time_end):
             return render_template('error.html', message='This booking already exists.', error_name='409')
         session.update(
@@ -502,6 +512,7 @@ if __name__ == '__main__':
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     email TEXT NOT NULL UNIQUE,
+                    email_salt TEXT NOT NULL,
                     phone TEXT NOT NULL,
                     password_hash TEXT NOT NULL,
                     salt TEXT NOT NULL,
@@ -515,6 +526,7 @@ if __name__ == '__main__':
         'organization_number',
         'billing_address',
         'email_billing_address',
+        'email_salt',
     ]
     for col in extra_cols:
         if col not in login_columns:

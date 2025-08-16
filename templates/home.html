@@ -41,8 +41,10 @@
   {% else %}
   <p>Du har inga bokningar.</p>
   {% endif %}
-  <p><a href="{{ url_for('index') }}">Gör ny bokning</a></p>
-  <p><a href="{{ url_for('logout') }}">Logga ut</a></p>
+  <div class="dashboard-actions">
+    <a href="{{ url_for('index') }}" class="dashboard-button">Gör ny bokning</a>
+    <a href="{{ url_for('logout') }}" class="dashboard-button">Logga ut</a>
+  </div>
 </div>
 {% else %}
 <div class="home-container">
