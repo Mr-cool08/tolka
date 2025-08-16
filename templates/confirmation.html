@@ -35,6 +35,7 @@
         Märkning: {{avtalskund_marking}}
         {% endif %}
         <form method="post" action="#">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="submit" value="Bekräfta" name="Bekräfta"/>
         </form>
     </div>

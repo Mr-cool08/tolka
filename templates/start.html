@@ -3,6 +3,7 @@
 {% block content %}
 <h1>Start Script</h1>
 <form action="/start_script" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="submit" value="Start">
 </form>
 {% endblock %}

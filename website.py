@@ -10,6 +10,7 @@ import time
 import functions
 from itertools import combinations
 import subprocess
+from flask_wtf.csrf import CSRFProtect
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",
@@ -29,6 +30,11 @@ languages = [
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = functions.generate_secret_key()
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=True,
+)
+csrf = CSRFProtect(app)
 
 # Define the password for accessing the /jobs route
 PASSWORD = os.getenv('password')
@@ -512,4 +518,5 @@ if __name__ == '__main__':
             cursor.execute(f"ALTER TABLE logins ADD COLUMN {col} TEXT")
 
     conn.close()
-    app.run(port=8080, host="0.0.0.0", debug=True)
+    debug_mode = os.getenv("FLASK_DEBUG") == "1"
+    app.run(port=8080, host="0.0.0.0", debug=debug_mode)

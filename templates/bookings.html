@@ -64,11 +64,15 @@
     </div>
 
     <script>
+        const csrfToken = "{{ csrf_token() }}";
         function acceptJob(jobId) {
             // Display loading overlay
             document.getElementById('loadingOverlay').style.display = 'flex';
 
-            fetch(`/jobs/${jobId}`, { method: 'POST' })
+            fetch(`/jobs/${jobId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            })
                 .then(response => {
                     // Hide loading overlay when the request is complete
                     document.getElementById('loadingOverlay').style.display = 'none';
