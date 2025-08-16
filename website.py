@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import time
-import stuff
+import functions
 from itertools import combinations
 import subprocess
 
@@ -28,7 +28,7 @@ languages = [
 
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = stuff.generate_secret_key()
+app.secret_key = functions.generate_secret_key()
 
 # Define the password for accessing the /jobs route
 PASSWORD = os.getenv('password')
@@ -195,7 +195,7 @@ def submit():
         time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
         
         # Check if the booking already exists in the database
-        if stuff.booking_exists(name, email, phone, language, time_start, time_end):
+        if functions.booking_exists(name, email, phone, language, time_start, time_end):
             return render_template('error.html', message='This booking already exists.', error_name='409')
 
         # Store the form data in the session
