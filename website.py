@@ -211,7 +211,7 @@ def accept_job(job_id):
         smtp_username = os.getenv("email")# Getting the email for the sender
         smtp_password = os.getenv('Email_password') # Getting the password for the sender
         msg['Bcc'] = smtp_username # Adding the secret email to send to self.
-        smtp_server = os.getenv("smpt_server_address")# Connect to the SMTP server
+        smtp_server = os.getenv("smtp_server_address")  # Connect to the SMTP server
         smtp_port = os.getenv("smtp_port")# Connect to the SMTP server
         recipient_email = session.get('tolkar_email', '')  # Retrieve the recipient email from the session
 
@@ -251,7 +251,7 @@ def accept_job(job_id):
         smtp_username = os.getenv("email")# Getting the email for the sender
         smtp_password = os.getenv('Email_password')# Getting the password for the sender
         msg['Bcc'] = smtp_username # Adding the secret email to send to self.
-        smtp_server = os.getenv("smpt_server_address")# Connect to the SMTP server
+        smtp_server = os.getenv("smtp_server_address")  # Connect to the SMTP server
         smtp_port = os.getenv("smtp_port")# Connect to the SMTP server
         recipient_email = job_data[1] # Retrieve the recipient email from the database
         with smtplib.SMTP(smtp_server, smtp_port) as server: # Sending the email
@@ -287,6 +287,7 @@ def submit():
         return redirect('/billing')
     if session.get("submitted"):
         return render_template("error.html", message="You have already submitted")
+
 
     language = request.form['language']
     time_start_str = request.form['starttime']
@@ -342,6 +343,48 @@ def submit():
         }
     )
     return redirect('/billing')
+
+    else:
+        # Retrieve the form data
+        name = request.form['name']
+        email = request.form['email']
+        language = request.form['language']
+        time_start_str = request.form['starttime']
+        time_end_minutes = int(request.form['endtime'])  # Retrieve the selected end time in minutes
+        phone = request.form['phone']
+        time_start = datetime.strptime(time_start_str, '%Y-%m-%dT%H:%M')
+        
+        # Calculate the end time based on the selected minutes
+        time_end = time_start + timedelta(minutes=time_end_minutes)
+        
+        time_start_str_trimmed = time_start.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
+        time_end_str_trimmed = time_end.strftime('%Y-%m-%d %H:%M')  # Extract date, hours, and minutes
+        
+        # Check if the booking already exists in the database using trimmed time strings
+        if functions.booking_exists(
+            name,
+            email,
+            phone,
+            language,
+            time_start_str_trimmed,
+            time_end_str_trimmed,
+        ):
+            return render_template(
+                'error.html',
+                message='This booking already exists.',
+                error_name='409',
+            )
+
+        # Store the form data in the session
+        session['name'] = name
+        session['email'] = email
+        session['phone'] = phone
+        session['language'] = language
+        session['time_start'] = time_start_str_trimmed
+        session['time_end'] = time_end_str_trimmed
+
+        return redirect('/billing')
+
 
 @app.route('/billing', methods=['GET', 'POST'])
 def billing():
@@ -417,16 +460,7 @@ def confirmation():
             return redirect("https://www.tolkar.se/bekraftelse/")
         else:
             return "invalid request"
-        """""
-        # Insert the booking details into the database, including the billing information
-        cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference, 'pending'))
-        conn.commit()
 
-        # Close the database connection
-        conn.close()
-        """""
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -443,7 +477,14 @@ def login():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('error.html', message='Detta var inte vad du letade efter.', error_name='404')
+    return (
+        render_template(
+            'error.html',
+            message='Detta var inte vad du letade efter.',
+            error_name='404',
+        ),
+        404,
+    )
 if __name__ == '__main__':
     # Connect to the database and create the 'bookings' table if it doesn't exist
     conn = sqlite3.connect('database.db')
