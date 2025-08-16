@@ -19,3 +19,9 @@ def test_login_route(client):
     response = client.get("/login")
     assert response.status_code == 200
     assert b"Login" in response.data
+
+
+def test_404_route(client):
+    response = client.get("/not-found")
+    assert response.status_code == 404
+    assert b"Detta var inte vad du letade efter." in response.data
