@@ -532,6 +532,11 @@ if __name__ == '__main__':
         if col not in login_columns:
             cursor.execute(f"ALTER TABLE logins ADD COLUMN {col} TEXT")
 
+    conn.commit()
     conn.close()
+
+    # Ensure a default test account exists for easier manual testing
+    functions.ensure_test_user()
+
     port = int(os.environ.get("PORT", 80))
     app.run(port=port, host="0.0.0.0", debug=False)
