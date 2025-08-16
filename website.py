@@ -138,6 +138,10 @@ def user_login():
         return render_template('user_login.html', error='Invalid credentials')
     return render_template('user_login.html')
 
+@app.route('/health')
+def health():
+    """Health check endpoint used by deployment platforms."""
+    return "OK", 200
 @app.route('/jobs') # The page to display the list of jobs
 def get_jobs():
     if 'authenticated' not in session or session['authenticated'] == False:
@@ -496,4 +500,5 @@ if __name__ == '__main__':
             cursor.execute(f"ALTER TABLE logins ADD COLUMN {col} TEXT")
 
     conn.close()
-    app.run(port=8080, host="0.0.0.0", debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(port=port, host="0.0.0.0", debug=True)

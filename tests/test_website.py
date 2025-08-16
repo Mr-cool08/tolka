@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 import website
 
@@ -24,10 +25,16 @@ def test_booking_route(client):
 def test_login_route(client):
     response = client.get("/login")
     assert response.status_code == 200
-    assert b"Login" in response.data
+    assert "Login" in response.get_data(as_text=True)
+
+
+def test_health_route(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert "OK" in response.get_data(as_text=True)
 
 
 def test_404_route(client):
     response = client.get("/not-found")
     assert response.status_code == 404
-    assert b"Detta var inte vad du letade efter." in response.data
+    assert "Detta var inte vad du letade efter." in response.get_data(as_text=True)
