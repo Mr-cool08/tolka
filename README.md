@@ -1,85 +1,60 @@
-Tolkar.se - Translation Service Web Application
-==============================================
+# Tolkar.se – Online Translation Booking
 
-This repository contains the source code for Tolkar.se, a web application that provides translation services. The application is built using Flask and uses SQLite for data storage. Users can submit translation job requests, and authenticated users can view and accept those requests. The application also sends confirmation emails to users and the translation company.
+Use the production service at [tolkar.se](https://tolkar.se) or try the
+development build at [tolka.onrender.com](https://tolka.onrender.com).
 
-Table of Contents
------------------
-1. Installation
-2. Features
-3. Usage
-4. Database
-5. Routes
-6. Authentication
-7. Error Handling
-8. License
+Tolkar.se is a web service that helps you book professional interpreters.  This
+guide explains how to use the site as a visitor or registered user.
 
-# 1. Installation
+## How it works
 
-Since this is a web application, you do not need to install it locally. You can access the live version of the application at https://www.tolkar.se/.
+1. **Create an account**  \
+   Visit `/signup` and register with your name, email and phone number.  You can
+   also add billing details for faster checkout and enable optional two‑factor
+   authentication (2FA) for extra security.
+2. **Sign in**  \
+   Log in at `/user_login`.  If you enabled 2FA, you'll be asked for a one‑time
+   code from your authenticator app.
+3. **Book a translator**  \
+   Go to `/booking` to choose languages, date, time and additional notes.  After
+   submitting the form you will be guided through billing and receive a
+   confirmation page.
+4. **Track your bookings**  \
+   The home page lists all your pending and accepted jobs.  You can cancel a
+   pending booking before it is accepted.
 
-# 2. Features
+When a translation company accepts your job request, a confirmation email is
+sent to the address you provided during sign‑up.
 
-- Users can submit translation job requests through the web interface.
-- Authenticated users can view the list of job requests and accept them.
-- Confirmation emails are sent to users and the translation company upon job acceptance.
+## Frequently asked questions
 
-# 3. Usage
+**Do I need an account?**  \
+Yes. Accounts let us contact you about your bookings and keep your information
+secure.
 
-Home page: The home page displays general information about the translation service. 
-This is not a part of the application.
+**How do I delete my account?**  \
+Use the “Remove my account” link on the home page. It will open an email draft
+requesting account deletion.
 
-Submit Translation Job:
+**Is my data secure?**  \
+Passwords are stored with PBKDF2 hashing and 2FA is available for extra
+protection.
 
-1. Fill out the required information in the form, including name, email, preferred language, start time, end time, and phone number.
-2. Click "Submit" to proceed to the billing information form.
+## For developers
 
-Billing Information Form:
+If you want to run the site locally or contribute to development:
 
-1. Enter the billing information, including optional organization number, billing address, email billing address, marking, and reference.
-2. Click "Submit" to complete the submission.
+```bash
+pip install -r requirements.txt
+export password=<admin-password>
+python website.py
+```
 
-Viewing and Accepting Job Requests (For Authenticated Users):
+Run tests with:
 
-1. Navigate to https://www.tolkar.se/login.
-2. Enter the correct password to access the list of job requests.
-3. Review the job requests and click the "Accept" button to accept a job.
-4. Confirmation emails will be sent to the user and the translation company upon accepting the job.
+```bash
+pytest
+```
 
-# 4. Database
-
-The application uses a SQLite database named `database.db` to store translation job and login information. Two tables are used:
-
-- `bookings`: stores translation job details and billing information submitted by users.
-- `logins`: stores user account details with salted password hashes.
-
-# 5. Routes
-
-The application defines several routes for different functionalities:
-
-- /: Home page with options to register, log in or book as a guest.
-- /booking: Route for submitting translation job information.
-- /submit: Route for submitting translation job requests.
-- /billing: Route for submitting billing information.
-- /signup: Route for creating a user account with basic contact details and optional billing information.
-- /user_login: Route for users to log in.
-- /login: Route for authentication to access and accept translation job requests.
-- /jobs: Route to view and accept translation job requests, authentication is needed to access.
-- /jobs/<int:job_id>: Route to accept a specific translation job request.
-
-# 6. Authentication
-
-The application uses a simple password-based authentication mechanism to protect the /jobs route. The password is stored as an environment variable and is required to access the job request list.
-
-# 7. Error Handling
-
-The application handles various types of errors gracefully and provides appropriate error messages to users. Some common error handling routes are:
-
-- /error: Route to display custom error messages with error codes.
-- /error/404: Route to handle page-not-found errors (HTTP 404).
-
-# 8. License
-
+## License
 This project is licensed under the MIT License.
-
-Note: This README file is meant for informational purposes only and should not be used for direct execution.
