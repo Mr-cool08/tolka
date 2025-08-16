@@ -38,3 +38,9 @@ def test_404_route(client):
     response = client.get("/not-found")
     assert response.status_code == 404
     assert "Detta var inte vad du letade efter." in response.get_data(as_text=True)
+
+
+def test_two_factor_requires_pending_user(client):
+    response = client.get("/two_factor")
+    assert response.status_code == 302
+    assert "/user_login" in response.headers["Location"]

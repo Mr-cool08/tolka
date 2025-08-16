@@ -10,6 +10,7 @@ import time
 import functions
 from itertools import combinations
 import subprocess
+import pyotp
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",
@@ -94,6 +95,7 @@ def signup():
         email_billing_address = request.form.get('email_billing_address', '')
         pwd_hash, salt = functions.hash_password(password)
         email_hash, email_salt = functions.hash_email(email)
+        totp_secret = pyotp.random_base32()
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
         cursor.execute("SELECT email, email_salt FROM logins")
@@ -105,8 +107,8 @@ def signup():
             """
             INSERT INTO logins (
                 name, email, email_salt, phone, password_hash, salt,
-                organization_number, billing_address, email_billing_address
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                organization_number, billing_address, email_billing_address, totp_secret
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 name,
@@ -118,14 +120,16 @@ def signup():
                 organization_number,
                 billing_address,
                 email_billing_address,
+                totp_secret,
             ),
         )
         user_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        session['user_id'] = user_id
-        session['user_email'] = email
-        return redirect(url_for('home'))
+        session['pending_user_id'] = user_id
+        session['pending_user_email'] = email
+        session['new_totp_secret'] = totp_secret
+        return redirect(url_for('two_factor'))
     return render_template('signup.html')
 
 
@@ -141,12 +145,36 @@ def user_login():
             user_id, email_hash, email_salt, pwd_hash, pwd_salt = row
             if functions.verify_email(email, email_hash, email_salt) and functions.verify_password(password, pwd_hash, pwd_salt):
                 conn.close()
-                session['user_id'] = user_id
-                session['user_email'] = email
-                return redirect(url_for('home'))
+                session['pending_user_id'] = user_id
+                session['pending_user_email'] = email
+                return redirect(url_for('two_factor'))
         conn.close()
         return render_template('user_login.html', error='Invalid credentials')
     return render_template('user_login.html')
+
+@app.route('/two_factor', methods=['GET', 'POST'])
+def two_factor():
+    if 'pending_user_id' not in session:
+        return redirect(url_for('user_login'))
+    secret = session.get('new_totp_secret')
+    if not secret:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT totp_secret FROM logins WHERE id = ?', (session['pending_user_id'],))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            secret = row[0]
+    if request.method == 'POST':
+        token = request.form['token']
+        totp = pyotp.TOTP(secret)
+        if totp.verify(token):
+            session['user_id'] = session.pop('pending_user_id')
+            session['user_email'] = session.pop('pending_user_email')
+            session.pop('new_totp_secret', None)
+            return redirect(url_for('home'))
+        return render_template('verify_2fa.html', error='Invalid code', secret=secret)
+    return render_template('verify_2fa.html', secret=secret)
 
 @app.route('/health')
 def health():
@@ -518,7 +546,8 @@ if __name__ == '__main__':
                     salt TEXT NOT NULL,
                     organization_number TEXT,
                     billing_address TEXT,
-                    email_billing_address TEXT)''')
+                    email_billing_address TEXT,
+                    totp_secret TEXT)''')
 
     cursor.execute("PRAGMA table_info(logins)")
     login_columns = [info[1] for info in cursor.fetchall()]
@@ -527,6 +556,7 @@ if __name__ == '__main__':
         'billing_address',
         'email_billing_address',
         'email_salt',
+        'totp_secret',
     ]
     for col in extra_cols:
         if col not in login_columns:
