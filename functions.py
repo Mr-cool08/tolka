@@ -2,6 +2,7 @@ import sqlite3
 import secrets
 import os
 import hashlib
+import pyotp
 
 
 def generate_secret_key():
@@ -65,9 +66,10 @@ def ensure_test_user(email="test@example.com", password="Masbo124"):
             return
     pwd_hash, pwd_salt = hash_password(password)
     email_hash, email_salt = hash_email(email)
+    totp_secret = pyotp.random_base32()
     cursor.execute(
-        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("Test User", email_hash, email_salt, "0000000000", pwd_hash, pwd_salt, "", "", ""),
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ("Test User", email_hash, email_salt, "0000000000", pwd_hash, pwd_salt, "", "", "", totp_secret),
     )
     conn.commit()
     conn.close()
