@@ -32,14 +32,31 @@ app.secret_key = functions.generate_secret_key()
 
 # Define the password for accessing the /jobs route
 PASSWORD = os.getenv('password')
+
+
 @app.route('/logout')
 def logout():
     session.pop('authenticated', None)
     session.pop('user_id', None)
     return redirect(url_for('home'))
-    
+
+
 @app.route('/')
 def home():
+    if session.get('user_id'):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT email FROM logins WHERE id = ?", (session['user_id'],)
+        )
+        user_email = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT id, language, time_start, time_end, status FROM bookings WHERE email = ?",
+            (user_email,),
+        )
+        bookings = cursor.fetchall()
+        conn.close()
+        return render_template('home.html', bookings=bookings)
     return render_template('home.html')
 
 
@@ -75,7 +92,7 @@ def signup():
         conn.commit()
         conn.close()
         session['user_id'] = user_id
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
     return render_template('signup.html')
 
 
@@ -91,7 +108,7 @@ def user_login():
         conn.close()
         if row and functions.verify_password(password, row[1], row[2]):
             session['user_id'] = row[0]
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
         return render_template('user_login.html', error='Invalid credentials')
     return render_template('user_login.html')
 
@@ -104,8 +121,8 @@ def get_jobs():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    # Retrieve jobs from the database
-    cursor.execute("SELECT * FROM bookings ORDER BY id ASC")
+    # Retrieve pending jobs from the database
+    cursor.execute("SELECT * FROM bookings WHERE status='pending' ORDER BY id ASC")
 
     jobs = cursor.fetchall()
 
@@ -131,8 +148,8 @@ def accept_job(job_id):
     cursor.execute("SELECT name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference FROM bookings WHERE id = ?", (job_id,))
     job_data = cursor.fetchone()
 
-    # Remove the accepted job from the 'bookings' table
-    cursor.execute("DELETE FROM bookings WHERE id = ?", (job_id,))
+    # Mark the job as accepted instead of deleting
+    cursor.execute("UPDATE bookings SET status='accepted' WHERE id = ?", (job_id,))
     conn.commit()
 
     # Close the database connection
@@ -218,6 +235,23 @@ def accept_job(job_id):
     send_tolkar_email() # Running the function to send to the translation company
     send_user_email() # Running the function to send to the user
     return 'Job accepted and email sent'
+
+
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    if not session.get('user_id'):
+        return redirect(url_for('user_login'))
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT email FROM logins WHERE id = ?", (session['user_id'],))
+    user_email = cursor.fetchone()[0]
+    cursor.execute(
+        "UPDATE bookings SET status='cancelled' WHERE id=? AND email=? AND status='pending'",
+        (booking_id, user_email),
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('home'))
 
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
@@ -318,8 +352,8 @@ def confirmation():
             conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
             cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference))
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, 'pending'))
             conn.commit()
 
         # Close the database connection
@@ -332,8 +366,8 @@ def confirmation():
         """""
         # Insert the booking details into the database, including the billing information
         cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference))
+            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, reference, 'pending'))
         conn.commit()
 
         # Close the database connection
@@ -375,7 +409,14 @@ if __name__ == '__main__':
                     email_billing_address TEXT,
                     marking TEXT,
                     avtalskund_marking TEXT,
-                    reference TEXT)''')
+                    reference TEXT,
+                    status TEXT NOT NULL DEFAULT "pending")''')
+
+    # Ensure the status column exists for older databases
+    cursor.execute("PRAGMA table_info(bookings)")
+    columns = [info[1] for info in cursor.fetchall()]
+    if 'status' not in columns:
+        cursor.execute("ALTER TABLE bookings ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'")
 
     # Create the 'logins' table if it doesn't exist
     cursor.execute('''CREATE TABLE IF NOT EXISTS logins
