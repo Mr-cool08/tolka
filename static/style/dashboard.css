@@ -91,7 +91,24 @@
 }
 
 @media (max-width: 600px) {
+    .dashboard-container {
+        padding: 15px;
+        width: 95%;
+    }
+
     .dashboard-table {
         min-width: 500px;
+    }
+
+    .dashboard-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .dashboard-button {
+        margin-right: 0;
+        width: 100%;
+        text-align: center;
     }
 }
