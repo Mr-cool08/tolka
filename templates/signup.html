@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Registrera{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/auth.css') }}">
+{% endblock %}
+{% block content %}
+<h1>Registrera konto</h1>
+<form method="post">
+  <label for="name">Namn:</label>
+  <input type="text" id="name" name="name" required><br><br>
+  <label for="phone">Telefonnummer:</label>
+  <input type="tel" id="phone" name="phone" required><br><br>
+  <label for="email">E-post:</label>
+  <input type="email" id="email" name="email" required><br><br>
+  <label for="password">Lösenord:</label>
+  <input type="password" id="password" name="password" required><br><br>
+
+  <label for="organization_number">Orginations nummer:</label>
+  <input type="text" id="organization_number" name="organization_number"><br><br>
+
+  <label for="billing_address">Fakturaadress:</label>
+  <input type="text" id="billing_address" name="billing_address"><br><br>
+
+  <label for="email_billing_address">E-postadress för fakturering:</label>
+  <input type="email" id="email_billing_address" name="email_billing_address"><br><br>
+
+  <input type="submit" value="Skapa konto">
+</form>
+{% endblock %}

@@ -36,7 +36,7 @@ Submit Translation Job:
 
 Billing Information Form:
 
-1. Enter the billing information, including organization number, billing address, email billing address, marking, and reference.
+1. Enter the billing information, including optional organization number, billing address, email billing address, marking, and reference.
 2. Click "Submit" to complete the submission.
 
 Viewing and Accepting Job Requests (For Authenticated Users):
@@ -48,18 +48,21 @@ Viewing and Accepting Job Requests (For Authenticated Users):
 
 # 4. Database
 
-The application uses a SQLite database to store translation job and billing information. Two tables are used:
+The application uses a SQLite database named `database.db` to store translation job and login information. Two tables are used:
 
-- bookings: This table stores the translation job details and billing information submitted by users.
-- taken_bookings: This table stores the accepted translation jobs.
+- `bookings`: stores translation job details and billing information submitted by users.
+- `logins`: stores user account details with salted password hashes.
 
 # 5. Routes
 
 The application defines several routes for different functionalities:
 
-- /: Submit form: Route for submitting translation job information.
+- /: Home page with options to register, log in or book as a guest.
+- /booking: Route for submitting translation job information.
 - /submit: Route for submitting translation job requests.
 - /billing: Route for submitting billing information.
+- /signup: Route for creating a user account with basic contact details and optional billing information.
+- /user_login: Route for users to log in.
 - /login: Route for authentication to access and accept translation job requests.
 - /jobs: Route to view and accept translation job requests, authentication is needed to access.
 - /jobs/<int:job_id>: Route to accept a specific translation job request.
