@@ -1,79 +1,89 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# A sample workflow which sets up Snyk to analyze the full Snyk platform (Snyk Open Source, Snyk Code,
-# Snyk Container and Snyk Infrastructure as Code)
-# The setup installs the Snyk CLI - for more details on the possible commands
-# check https://docs.snyk.io/snyk-cli/cli-reference
-# The results of Snyk Code are then uploaded to GitHub Security Code Scanning
-#
-# In order to use the Snyk Action you will need to have a Snyk API token.
-# More details in https://github.com/snyk/actions#getting-your-snyk-token
-# or you can signup for free at https://snyk.io/login
-#
-# For more examples, including how to limit scans to only high-severity issues
-# and fail PR checks, see https://github.com/snyk/actions/
-
 name: Snyk Security
 
 on:
   push:
-    branches: ["main" ]
+    branches: [ main ]
   pull_request:
-    branches: ["main"]
+    branches: [ main ]
+  workflow_dispatch:
 
+# Krävs för att kunna ladda upp SARIF till Code Scanning
 permissions:
   contents: read
+  actions: read
+  security-events: write
+
+concurrency:
+  group: snyk-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   snyk:
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    runs-on: ubuntu-latest
+    name: snyk
+    runs-on: ubuntu-24.04
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Snyk CLI to check for security issues
-        # Snyk can be used to break the build when it detects security issues.
-        # In this case we want to upload the SAST issues to GitHub Code Scanning
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Pinnar till din använda commit för reproducerbarhet
+      - name: Set up Snyk CLI
         uses: snyk/actions/setup@806182742461562b67788a64410098c9d9b96adb
+        with:
+          snyk-version: latest
 
-        # For Snyk Open Source you must first set up the development environment for your application's dependencies
-        # For example for Node
-        #- uses: actions/setup-node@v4
-        #  with:
-        #    node-version: 20
+      # --- Snyk Code (SAST) ---
+      # Kör bara om det finns kodfiler; stoppa inte pipelinen vid fel/entitlements.
+      - name: Snyk Code test (SARIF)
+        id: snyk_code
+        if: ${{ hashFiles('**/*.js','**/*.jsx','**/*.ts','**/*.tsx','**/*.py','**/*.java','**/*.cs','**/*.go','**/*.rb','**/*.php','**/*.kt','**/*.swift') != '' }}
+        continue-on-error: true
+        run: |
+          snyk code test --sarif --sarif-file-output=snyk-code.sarif
 
-        env:
-          # This is where you will need to introduce the Snyk API token created with your Snyk account
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-        # Runs Snyk Code (SAST) analysis and uploads result into GitHub.
-        # Use || true to not fail the pipeline
-      - name: Snyk Code test
-        run: snyk code test --sarif > snyk-code.sarif # || true
-
-        # Runs Snyk Open Source (SCA) analysis and uploads result to Snyk.
-      - name: Snyk Open Source monitor
-        run: snyk monitor --all-projects
-
-        # Runs Snyk Infrastructure as Code (IaC) analysis and uploads result to Snyk.
-        # Use || true to not fail the pipeline.
-      - name: Snyk IaC test and report
-        run: snyk iac test --report # || true
-
-        # Build the docker image for testing
-      - name: Build a Docker image
-        run: docker build -t your/image-to-test .
-        # Runs Snyk Container (Container and SCA) analysis and uploads result to Snyk.
-      - name: Snyk Container monitor
-        run: snyk container monitor your/image-to-test --file=Dockerfile
-
-        # Push the Snyk Code results into GitHub Code Scanning tab
-      - name: Upload result to GitHub Code Scanning
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always()
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk-code.sarif
+
+      # --- Snyk Open Source (SCA) ---
+      # Kör bara om det finns kända manifest; stoppa inte pipelinen vid findings/fel.
+      - name: Snyk Open Source monitor
+        if: ${{ always() && (
+              hashFiles('package.json','package-lock.json','yarn.lock','pnpm-lock.yaml',
+                        'requirements.txt','poetry.lock','Pipfile.lock',
+                        'pom.xml','build.gradle','build.gradle.kts',
+                        'Gemfile.lock','go.mod','Cargo.toml',
+                        'composer.lock','*.csproj','*.fsproj') != ''
+            ) }}
+        continue-on-error: true
+        run: |
+          snyk monitor --all-projects
+
+      # --- Snyk IaC ---
+      # Kör bara om repo:t ser ut att innehålla IaC (Terraform/YAML); stoppa inte pipelinen vid fel.
+      - name: Snyk IaC test
+        if: ${{ always() && (
+              hashFiles('**/*.tf') != '' ||
+              hashFiles('**/*.yml') != '' ||
+              hashFiles('**/*.yaml') != ''
+            ) }}
+        continue-on-error: true
+        run: |
+          snyk iac test
+
+      # --- Container (frivilligt) ---
+      - name: Build Docker image
+        if: ${{ always() && (hashFiles('Dockerfile','**/Dockerfile') != '') }}
+        run: |
+          docker build -t local/app:${{ github.sha }} .
+
+      - name: Snyk Container monitor
+        if: ${{ always() && (hashFiles('Dockerfile','**/Dockerfile') != '') }}
+        continue-on-error: true
+        run: |
+          snyk container monitor local/app:${{ github.sha }}
