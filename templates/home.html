@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1>Välkommen</h1>
+<ul>
+  <li><a href="{{ url_for('signup') }}">Skapa konto</a></li>
+  <li><a href="{{ url_for('user_login') }}">Logga in</a></li>
+  <li><a href="{{ url_for('book') }}">Fortsätt som gäst</a></li>
+  {% if session.get('user_id') %}
+  <li><a href="{{ url_for('user_logout') }}">Logga ut</a></li>
+  {% endif %}
+</ul>
+{% endblock %}
+

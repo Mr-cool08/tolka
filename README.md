@@ -20,14 +20,14 @@ Since this is a web application, you do not need to install it locally. You can 
 
 # 2. Features
 
-- Users can submit translation job requests through the web interface.
-- Authenticated users can view the list of job requests and accept them.
-- Confirmation emails are sent to users and the translation company upon job acceptance.
+- Users can create accounts or log in to reuse their contact information.
+- Passwords are stored securely using salted hashes.
+- Translation job requests can also be submitted as a one-time guest booking.
+- Administrators can view the list of job requests.
 
 # 3. Usage
 
-Home page: The home page displays general information about the translation service. 
-This is not a part of the application.
+Home page: Users can sign up, log in, or continue as guests from the landing page.
 
 Submit Translation Job:
 
@@ -39,30 +39,31 @@ Billing Information Form:
 1. Enter the billing information, including organization number, billing address, email billing address, marking, and reference.
 2. Click "Submit" to complete the submission.
 
-Viewing and Accepting Job Requests (For Authenticated Users):
+Viewing Job Requests (For Administrators):
 
 1. Navigate to https://www.tolkar.se/login.
 2. Enter the correct password to access the list of job requests.
-3. Review the job requests and click the "Accept" button to accept a job.
-4. Confirmation emails will be sent to the user and the translation company upon accepting the job.
 
 # 4. Database
 
-The application uses a SQLite database to store translation job and billing information. Two tables are used:
+The application uses a SQLite database called `database.db` to store information. Two primary tables are used:
 
-- bookings: This table stores the translation job details and billing information submitted by users.
-- taken_bookings: This table stores the accepted translation jobs.
+- **bookings**: Stores translation job details and billing information submitted by users.
+- **logins**: Stores user account information with salted password hashes.
 
 # 5. Routes
 
 The application defines several routes for different functionalities:
 
-- /: Submit form: Route for submitting translation job information.
-- /submit: Route for submitting translation job requests.
-- /billing: Route for submitting billing information.
-- /login: Route for authentication to access and accept translation job requests.
-- /jobs: Route to view and accept translation job requests, authentication is needed to access.
-- /jobs/<int:job_id>: Route to accept a specific translation job request.
+- `/` : Home page with options to sign up, log in, or book as a guest.
+- `/book` : Form for submitting translation job information.
+- `/signup` : Create a new user account.
+- `/user_login` : Log in to an existing account.
+- `/user_logout` : Log out of the current account.
+- `/submit` : Route for submitting translation job requests.
+- `/billing` : Route for submitting billing information.
+- `/login` : Admin authentication to access job requests.
+- `/jobs` : View translation job requests (admin access).
 
 # 6. Authentication
 
