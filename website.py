@@ -361,16 +361,12 @@ def billing():
     organization_number = request.form['organization_number']
     billing_address = request.form['billing_address']
     email_billing_address = request.form['email_billing_address']
-    marking = request.form['marking']
-    avtalskund_marking = request.form['avtalskund_marking']
     reference = request.form['reference']
     session.update(
         {
-            'avtalskund_marking': avtalskund_marking,
             'organization_number': organization_number,
             'billing_address': billing_address,
             'email_billing_address': email_billing_address,
-            'marking': marking,
             'reference': reference,
             'submitted': True,
         }
@@ -386,23 +382,31 @@ def confirmation():
             organization_number = session.get('organization_number')
             billing_address = session.get('billing_address')
             email_billing_address = session.get('email_billing_address')
-            marking = session.get('marking')
             reference = session.get('reference')
-            avtalskund_marking = session.get('avtalskund_marking')
             name = session.get('name')
             email = session.get('email')
             language = session.get('language')
             time_start = session.get('time_start')
             time_end = session.get('time_end')
             phone = session.get('phone')
-            return render_template('confirmation.html', name=name, email=email, phone=phone, language=language, time_start=time_start, time_end=time_end, organization_number=organization_number, billing_address=billing_address, email_billing_address=email_billing_address, marking=marking, reference=reference, avtalskund_marking=avtalskund_marking)
+            return render_template(
+                'confirmation.html',
+                name=name,
+                email=email,
+                phone=phone,
+                language=language,
+                time_start=time_start,
+                time_end=time_end,
+                organization_number=organization_number,
+                billing_address=billing_address,
+                email_billing_address=email_billing_address,
+                reference=reference,
+            )
         elif request.method == 'POST':
             organization_number = session.get('organization_number')
             billing_address = session.get('billing_address')
             email_billing_address = session.get('email_billing_address')
-            marking = session.get('marking')
             reference = session.get('reference')
-            avtalskund_marking = session.get('avtalskund_marking')
             name = session.get('name')
             email = session.get('email')
             language = session.get('language')
@@ -412,11 +416,26 @@ def confirmation():
             conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
             cursor.execute(
-            "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, 'pending'))
+                "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    name,
+                    email,
+                    phone,
+                    language,
+                    time_start,
+                    time_end,
+                    organization_number,
+                    billing_address,
+                    email_billing_address,
+                    '',
+                    '',
+                    reference,
+                    'pending',
+                ),
+            )
             conn.commit()
 
-        # Close the database connection
+            # Close the database connection
             conn.close()
             time.sleep(1)
             session['submitted'] = False

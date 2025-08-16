@@ -4,71 +4,25 @@ Faktureringsinformation
 {% endblock %}
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">
-{% endblock %}  
+{% endblock %}
 
 {% block content %}
 <h1>Faktureringsinformation</h1>
 <form method="post" action="/billing">
-  
-  <label class="container" for="avtals_kund">Är du en avtalskund?
 
-  <input type="checkbox" id="avtals_kund" name="avtals_kund" onchange="toggleFields()"><br><br>
-  <span class="checkmark"></span></label>
-
-  <!-- Input fields for non-avtalskund -->
-  <div id="nonAvtalskundFields">
     <label for="organization_number">Orginations nummer:</label><br>
     <input type="text" id="organization_number" name="organization_number"><br><br>
 
     <label for="billing_address">Fakturaadress*:</label><br>
-    <input type="text" id="billing_address" name="billing_address" ><br><br>
+    <input type="text" id="billing_address" name="billing_address"><br><br>
 
     <label for="email_billing_address">E-postadress för fakturering*:</label><br>
-    <input type="email" id="email_billing_address" name="email_billing_address" ><br><br>
-
-    <label for="marking">Märkning:</label><br>
-    <input type="text" id="marking" name="marking"><br><br>
+    <input type="email" id="email_billing_address" name="email_billing_address"><br><br>
 
     <label for="reference">Referens*:</label><br>
-    <input type="text" id="reference" name="reference" ><br><br>
-  </div>
+    <input type="text" id="reference" name="reference"><br><br>
 
-  <!-- Input fields for avtalskund -->
-  <div id="avtalskundFields" style="display: none;">
-    <!-- Add avtalskund-specific fields here -->
-    <label for="avtalskund_marking" >Märkning*:</label><br>
-    <input type="text" id="avtalskund_marking" name="avtalskund_marking"><br><br>
-    
-
-  </div>
-
-  <p style="color: red;">*obligatorisk</p>
-  <input type="submit" value="Skicka in">
+    <p style="color: red;">*obligatorisk</p>
+    <input type="submit" value="Skicka in">
 </form>
-
-
-
-<script>
-  function toggleFields() {
-    var avtalskundCheckbox = document.getElementById("avtals_kund");
-    var nonAvtalskundFields = document.getElementById("nonAvtalskundFields");
-    var avtalskundFields = document.getElementById("avtalskundFields");
-  
-    if (avtalskundCheckbox.checked) {
-      // If avtalskund checkbox is checked, hide non-avtalskund fields and show avtalskund fields
-      nonAvtalskundFields.style.display = "none";
-      avtalskundFields.style.display = "block";
-    } else {
-      // If avtalskund checkbox is unchecked, show non-avtalskund fields and hide avtalskund fields
-      nonAvtalskundFields.style.display = "block";
-      avtalskundFields.style.display = "none";
-    }
-  }
-  
-  // Initial invocation to set the initial state based on the checkbox state
-  toggleFields();
-  </script>
-
-  
-</form>
-  {% endblock %}  
+{% endblock %}
