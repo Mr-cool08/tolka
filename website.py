@@ -8,8 +8,6 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import time
 import stuff
-from itertools import combinations
-import subprocess
 
 languages = [
     "Franska", "Engelska", "Tyska", "Spanska",

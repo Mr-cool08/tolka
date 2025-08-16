@@ -305,3 +305,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,windows,flask,python
 *.db
 .dccache
+
+# Local environment files
+.env
+
