@@ -44,3 +44,28 @@ def test_two_factor_requires_pending_user(client):
     response = client.get("/two_factor")
     assert response.status_code == 302
     assert "/user_login" in response.headers["Location"]
+
+
+def test_login_respects_application_root(monkeypatch):
+    import os
+    import website
+
+    monkeypatch.setenv("password", "secret")
+    website.PASSWORD = "secret"
+
+    app = website.app
+    app.config.update({
+        "TESTING": True,
+        "APPLICATION_ROOT": "/prefix",
+        "SERVER_NAME": "example.com",
+    })
+
+    with app.test_client() as client:
+        response = client.post(
+            "/login",
+            base_url="http://example.com/prefix",
+            data={"email": "e", "password": "secret"},
+        )
+
+        assert response.status_code == 302
+        assert response.headers["Location"] == "/prefix/jobs"

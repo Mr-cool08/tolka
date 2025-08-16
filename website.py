@@ -324,8 +324,8 @@ def cancel_booking(booking_id):
 def submit():
     if request.method == 'GET':
         if session.get('user_id'):
-            return redirect('/confirmation')
-        return redirect('/billing')
+            return redirect(url_for('confirmation'))
+        return redirect(url_for('billing'))
     if session.get("submitted"):
         return render_template("error.html", message="You have already submitted")
 
@@ -367,7 +367,7 @@ def submit():
                 'submitted': True,
             }
         )
-        return redirect('/confirmation')
+        return redirect(url_for('confirmation'))
 
     name = request.form['name']
     email = request.form['email']
@@ -384,7 +384,7 @@ def submit():
             'time_end': time_end_str_trimmed,
         }
     )
-    return redirect('/billing')
+    return redirect(url_for('billing'))
 
 
 @app.route('/billing', methods=['GET', 'POST'])
@@ -492,7 +492,7 @@ def login():
             # Store the email in the session
             session['tolkar_email'] = request.form['email']
             session['authenticated'] = True
-            return redirect('/jobs')
+            return redirect(url_for('get_jobs'))
         else:
             return render_template('login.html', error='Invalid password')
     return render_template('login.html')
