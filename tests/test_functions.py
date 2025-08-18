@@ -115,3 +115,18 @@ def test_ensure_test_user_creates_single_entry(tmp_path, monkeypatch):
     )
     assert count == 1
     assert all(totp == '' for _, _, totp in rows)
+
+
+def test_ensure_test_user_with_totp_creates_secret(tmp_path, monkeypatch):
+    setup_logins_db(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    functions.ensure_test_user(totp=True)
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT email, email_salt, totp_secret FROM logins')
+    row = cursor.fetchone()
+    conn.close()
+    assert row is not None
+    e_hash, e_salt, totp_secret = row
+    assert functions.verify_email('liam@localhost.com', e_hash, e_salt)
+    assert totp_secret != ''

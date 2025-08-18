@@ -412,3 +412,125 @@ def test_confirmation_post_creates_booking(client, tmp_path, monkeypatch):
     row = conn.execute("SELECT name, status FROM bookings").fetchone()
     conn.close()
     assert row == ("Name", "pending")
+
+
+def test_user_login_invalid_credentials_shows_error(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT
+        )"""
+    )
+    conn.commit()
+    conn.close()
+
+    response = client.post(
+        "/user_login",
+        data={"email": "nobody@example.com", "password": "bad"},
+    )
+    assert response.status_code == 200
+    assert "Invalid credentials" in response.get_data(as_text=True)
+
+
+def test_two_factor_valid_token_authenticates_user(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT
+        )"""
+    )
+    conn.commit()
+    email = "user@example.com"
+    pwd_hash, pwd_salt = functions.hash_password("secret")
+    email_hash, email_salt = functions.hash_email(email)
+    totp_secret = pyotp.random_base32()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, '', '', '', ?)",
+        ("Test", email_hash, email_salt, "000", pwd_hash, pwd_salt, totp_secret),
+    )
+    user_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    with client.session_transaction() as sess:
+        sess["pending_user_id"] = user_id
+        sess["pending_user_email"] = email
+
+    token = pyotp.TOTP(totp_secret).now()
+    response = client.post("/two_factor", data={"token": token})
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/"
+
+    with client.session_transaction() as sess:
+        assert sess.get("user_id") == user_id
+        assert sess.get("user_email") == email
+        assert "pending_user_id" not in sess
+        assert "pending_user_email" not in sess
+
+
+def test_two_factor_invalid_token_shows_error(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT
+        )"""
+    )
+    conn.commit()
+    email = "user@example.com"
+    pwd_hash, pwd_salt = functions.hash_password("secret")
+    email_hash, email_salt = functions.hash_email(email)
+    totp_secret = pyotp.random_base32()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, '', '', '', ?)",
+        ("Test", email_hash, email_salt, "000", pwd_hash, pwd_salt, totp_secret),
+    )
+    user_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    with client.session_transaction() as sess:
+        sess["pending_user_id"] = user_id
+        sess["pending_user_email"] = email
+
+    response = client.post("/two_factor", data={"token": "000000"})
+    assert response.status_code == 200
+    assert "Invalid code" in response.get_data(as_text=True)
+
+    with client.session_transaction() as sess:
+        assert "user_id" not in sess
+        assert sess.get("pending_user_id") == user_id
