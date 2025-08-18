@@ -5,12 +5,12 @@ import hashlib
 
 
 def generate_secret_key():
-    """Generate a random 32-byte key using secrets module."""
+    # Generate a random 32-byte key using secrets module.
     return secrets.token_hex(32)
 
 
 def booking_exists(name, email, phone, language, time_start, time_end):
-    """Check if a booking with the same details already exists."""
+    # Check if a booking with the same details already exists.
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     cursor.execute(
@@ -23,7 +23,7 @@ def booking_exists(name, email, phone, language, time_start, time_end):
 
 
 def hash_password(password, salt=None):
-    """Hash a password with PBKDF2 and return hex digest and salt."""
+    # Hash a password with PBKDF2 and return hex digest and salt.
     if salt is None:
         salt = os.urandom(16)
     else:
@@ -33,13 +33,13 @@ def hash_password(password, salt=None):
 
 
 def verify_password(password, stored_hash, salt):
-    """Verify a password against the stored hash and salt."""
+    # Verify a password against the stored hash and salt.
     new_hash, _ = hash_password(password, salt)
     return new_hash == stored_hash
 
 
 def hash_email(email, salt=None):
-    """Hash an email with PBKDF2 and return hex digest and salt."""
+    # Hash an email with PBKDF2 and return hex digest and salt.
     email = email.lower()
     if salt is None:
         salt = os.urandom(16)
@@ -49,13 +49,15 @@ def hash_email(email, salt=None):
     return email_hash.hex(), salt.hex()
 
 
+
 def verify_email(email, stored_hash, salt):
-    """Verify an email against the stored hash and salt."""
+    # Verify an email against the stored hash and salt.
     new_hash, _ = hash_email(email, salt)
     return new_hash == stored_hash
 
-def ensure_test_user(email="test@example.com", password="Masbo124"):
-    """Create a default test user if it does not already exist."""
+def ensure_test_user(email="liam@localhost.com", password="Masbo124", totp=True):
+    # Ensure that a default test user exists in the database.
+    # Create a default test user if it does not already exist.
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     cursor.execute("SELECT email, email_salt FROM logins")
@@ -63,11 +65,16 @@ def ensure_test_user(email="test@example.com", password="Masbo124"):
         if verify_email(email, email_hash, email_salt):
             conn.close()
             return
+    if totp:
+        totp_secret = generate_secret_key()
+    else:
+        totp_secret = None
+
     pwd_hash, pwd_salt = hash_password(password)
     email_hash, email_salt = hash_email(email)
     cursor.execute(
         "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("Test User", email_hash, email_salt, "0000000000", pwd_hash, pwd_salt, "", "", "", ""),
+        ("Test User", email_hash, email_salt, "0000000000", pwd_hash, pwd_salt, "", "", "", totp_secret),
     )
     conn.commit()
     conn.close()
