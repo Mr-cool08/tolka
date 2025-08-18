@@ -111,7 +111,7 @@ def test_ensure_test_user_creates_single_entry(tmp_path, monkeypatch):
     rows = cursor.fetchall()
     conn.close()
     count = sum(
-        1 for e_hash, e_salt, _ in rows if functions.verify_email('test@example.com', e_hash, e_salt)
+        1 for e_hash, e_salt, _ in rows if functions.verify_email('liam@localhost.com', e_hash, e_salt)
     )
     assert count == 1
     assert all(totp == '' for _, _, totp in rows)

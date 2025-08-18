@@ -55,7 +55,7 @@ def verify_email(email, stored_hash, salt):
     new_hash, _ = hash_email(email, salt)
     return new_hash == stored_hash
 
-def ensure_test_user(email="liam@localhost.com", password="Masbo124", totp=True):
+def ensure_test_user(email="liam@localhost.com", password="Masbo124", totp=False):
     # Ensure that a default test user exists in the database.
     # Create a default test user if it does not already exist.
     conn = sqlite3.connect('database.db')
@@ -65,10 +65,11 @@ def ensure_test_user(email="liam@localhost.com", password="Masbo124", totp=True)
         if verify_email(email, email_hash, email_salt):
             conn.close()
             return
+    # Only generate a totp_secret when explicitly requested
     if totp:
         totp_secret = generate_secret_key()
     else:
-        totp_secret = None
+        totp_secret = ""
 
     pwd_hash, pwd_salt = hash_password(password)
     email_hash, email_salt = hash_email(email)
