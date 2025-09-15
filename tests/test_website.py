@@ -336,7 +336,9 @@ def test_cancel_booking_updates_status(client, tmp_path, monkeypatch):
             marking TEXT,
             avtalskund_marking TEXT,
             reference TEXT,
-            status TEXT NOT NULL DEFAULT 'pending'
+            status TEXT NOT NULL DEFAULT 'pending',
+            interpreter_name TEXT,
+            interpreter_phone TEXT
         )
         """
     )
@@ -382,7 +384,9 @@ def test_confirmation_post_creates_booking(client, tmp_path, monkeypatch):
             marking TEXT,
             avtalskund_marking TEXT,
             reference TEXT,
-            status TEXT NOT NULL DEFAULT 'pending'
+            status TEXT NOT NULL DEFAULT 'pending',
+            interpreter_name TEXT,
+            interpreter_phone TEXT
         )
         """
     )
@@ -534,3 +538,113 @@ def test_two_factor_invalid_token_shows_error(client, tmp_path, monkeypatch):
     with client.session_transaction() as sess:
         assert "user_id" not in sess
         assert sess.get("pending_user_id") == user_id
+
+
+def test_forgot_password_creates_reset_entry(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT
+        )"""
+    )
+    conn.execute(
+        """CREATE TABLE password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT NOT NULL,
+            expires_at TEXT NOT NULL
+        )"""
+    )
+    email = "reset@example.com"
+    pwd_hash, pwd_salt = functions.hash_password("secret")
+    email_hash, email_salt = functions.hash_email(email)
+    conn.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '')",
+        ("Test", email_hash, email_salt, "000", pwd_hash, pwd_salt),
+    )
+    conn.commit()
+    conn.close()
+
+    response = client.post("/forgot_password", data={"email": email})
+    assert response.status_code == 200
+    assert "återställningslänk" in response.get_data(as_text=True)
+
+    conn = sqlite3.connect("database.db")
+    row = conn.execute("SELECT token FROM password_resets").fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0]
+
+
+def test_reset_password_updates_user_credentials(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT
+        )"""
+    )
+    conn.execute(
+        """CREATE TABLE password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT NOT NULL,
+            expires_at TEXT NOT NULL
+        )"""
+    )
+    email = "user@example.com"
+    old_pwd_hash, old_pwd_salt = functions.hash_password("oldpass")
+    email_hash, email_salt = functions.hash_email(email)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '')",
+        ("Test", email_hash, email_salt, "000", old_pwd_hash, old_pwd_salt),
+    )
+    user_id = cursor.lastrowid
+    token = "test-token"
+    cursor.execute(
+        "INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)",
+        (user_id, token, "2999-01-01T00:00:00"),
+    )
+    conn.commit()
+    conn.close()
+
+    new_password = "newpass123"
+    response = client.post(
+        "/reset_password",
+        data={
+            "token": token,
+            "password": new_password,
+            "confirm_password": new_password,
+        },
+    )
+    assert response.status_code == 200
+    assert "Lösenordet är uppdaterat" in response.get_data(as_text=True)
+
+    conn = sqlite3.connect("database.db")
+    row = conn.execute("SELECT password_hash, salt FROM logins WHERE id = ?", (user_id,)).fetchone()
+    assert functions.verify_password(new_password, row[0], row[1])
+    remaining = conn.execute("SELECT token FROM password_resets WHERE user_id = ?", (user_id,)).fetchone()
+    conn.close()
+    assert remaining is None

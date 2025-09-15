@@ -12,10 +12,15 @@
     {% if error %}
         <p class="error">{{ error }}</p>
     {% endif %}
+    <label for="name">Fullständigt namn:</label>
+    <input type="text" id="name" name="name" required>
+    <label for="phone">Telefonnummer:</label>
+    <input type="tel" id="phone" name="phone" required>
     <label for="email">Email:</label>
     <input type="email" id="email" name="email" required>
     <label for="password">Password:</label>
     <input type="password" id="password" name="password" required>
+    <p class="form-hint">Namnet och telefonnumret visas för beställaren när du accepterar ett uppdrag.</p>
     <input type="submit" value="Login">
 </form>
 

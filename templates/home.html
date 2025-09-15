@@ -24,13 +24,21 @@
         </tr>
         {% for b in bookings %}
         <tr>
-          <td>{{ b[1] }}</td>
-          <td>{{ b[2] }}</td>
-          <td>{{ b[3] }}</td>
-          <td class="status status-{{ b[4] }}">{{ b[4] }}</td>
+          <td>{{ b.language }}</td>
+          <td>{{ b.time_start }}</td>
+          <td>{{ b.time_end }}</td>
+          <td class="status status-{{ b.status }}">
+            {% if b.status == 'accepted' and (b.interpreter_name or b.interpreter_phone) %}
+            Accepted by {{ b.interpreter_name or 'tolken' }} – {{ b.interpreter_phone or 'saknas' }}
+            {% elif b.status == 'cancelled' %}
+            Cancelled
+            {% else %}
+            {{ b.status }}
+            {% endif %}
+          </td>
           <td>
-            {% if b[4] == 'pending' %}
-            <form method="post" action="{{ url_for('cancel_booking', booking_id=b[0]) }}">
+            {% if b.status == 'pending' %}
+            <form method="post" action="{{ url_for('cancel_booking', booking_id=b.id) }}">
               <button type="submit" class="cancel-button">Avbryt</button>
             </form>
             {% endif %}
@@ -43,6 +51,7 @@
     <p>Du har inga bokningar.</p>
     {% endif %}
     <div class="dashboard-actions">
+      <a href="{{ url_for('home') }}" class="dashboard-button">Uppdatera</a>
       <a href="{{ url_for('index') }}" class="dashboard-button">Gör ny bokning</a>
       <a href="{{ url_for('logout') }}" class="dashboard-button">Logga ut</a>
       <a href="{{ removal_link }}" class="dashboard-button">Ta bort konto</a>

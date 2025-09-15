@@ -38,6 +38,21 @@ button:hover {
     color: red;
 }
 
+.form-hint {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.form-hint a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.form-hint a:hover {
+    text-decoration: underline;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     input[type="text"],
