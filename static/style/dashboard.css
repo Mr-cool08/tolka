@@ -95,6 +95,10 @@
     font-weight: bold;
 }
 
+.status {
+    font-weight: bold;
+}
+
 @media (max-width: 600px) {
     .dashboard-container {
         padding: 15px;

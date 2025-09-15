@@ -16,7 +16,10 @@ def setup_db(tmp_path):
             phone TEXT NOT NULL,
             language TEXT NOT NULL,
             time_start TEXT NOT NULL,
-            time_end TEXT NOT NULL
+            time_end TEXT NOT NULL,
+            status TEXT,
+            interpreter_name TEXT,
+            interpreter_phone TEXT
         )
         """
     )
