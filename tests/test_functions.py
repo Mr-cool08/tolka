@@ -46,7 +46,9 @@ def setup_logins_db(tmp_path):
             organization_number TEXT,
             billing_address TEXT,
             email_billing_address TEXT,
-            totp_secret TEXT
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
         )
         """,
     )
