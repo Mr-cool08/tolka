@@ -38,6 +38,10 @@ button:hover {
     color: red;
 }
 
+.success {
+    color: #27ae60;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     input[type="text"],

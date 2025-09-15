@@ -200,11 +200,16 @@ def test_login_respects_application_root(monkeypatch):
         response = client.post(
             "/login",
             base_url="http://example.com/prefix",
-            data={"email": "e", "password": "secret"},
+            data={
+                "email": "e",
+                "password": "secret",
+                "name": "Interpreter",
+                "phone": "0700000000",
+            },
         )
 
-        assert response.status_code == 302
-        assert response.headers["Location"] == "/prefix/jobs"
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/prefix/jobs"
 
     website.PASSWORD = old_password
     app.config["APPLICATION_ROOT"] = "/"
@@ -336,7 +341,9 @@ def test_cancel_booking_updates_status(client, tmp_path, monkeypatch):
             marking TEXT,
             avtalskund_marking TEXT,
             reference TEXT,
-            status TEXT NOT NULL DEFAULT 'pending'
+            status TEXT NOT NULL DEFAULT 'pending',
+            interpreter_name TEXT,
+            interpreter_phone TEXT
         )
         """
     )
@@ -382,7 +389,9 @@ def test_confirmation_post_creates_booking(client, tmp_path, monkeypatch):
             marking TEXT,
             avtalskund_marking TEXT,
             reference TEXT,
-            status TEXT NOT NULL DEFAULT 'pending'
+            status TEXT NOT NULL DEFAULT 'pending',
+            interpreter_name TEXT,
+            interpreter_phone TEXT
         )
         """
     )
@@ -441,6 +450,45 @@ def test_user_login_invalid_credentials_shows_error(client, tmp_path, monkeypatc
     )
     assert response.status_code == 200
     assert "Invalid credentials" in response.get_data(as_text=True)
+
+
+def test_forgot_password_resets_password(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT
+        )"""
+    )
+    email = "reset@example.com"
+    old_pwd_hash, old_pwd_salt = functions.hash_password("oldsecret")
+    email_hash, email_salt = functions.hash_email(email)
+    conn.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '')",
+        ("Reset", email_hash, email_salt, "000", old_pwd_hash, old_pwd_salt),
+    )
+    conn.commit()
+    conn.close()
+
+    response = client.post("/forgot_password", data={"email": email})
+    assert response.status_code == 200
+    assert "Om e-postadressen finns registrerad" in response.get_data(as_text=True)
+
+    conn = sqlite3.connect("database.db")
+    row = conn.execute("SELECT password_hash, salt FROM logins").fetchone()
+    conn.close()
+    assert row[0] != old_pwd_hash
+    assert row[1] != old_pwd_salt
 
 
 def test_two_factor_valid_token_authenticates_user(client, tmp_path, monkeypatch):

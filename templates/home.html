@@ -11,7 +11,10 @@
 <div class="home-hero-container">
   <img src="{{ url_for('static', filename='images/20250816_2214_Tolk och klient_simple_compose_01k2t86s2me5f9xgbccfde7gcg.png') }}" alt="Tolkar" class="home-hero">
   <div class="dashboard-container">
-    <h1>Dina bokningar</h1>
+    <div class="dashboard-header">
+      <h1>Dina bokningar</h1>
+      <button type="button" class="dashboard-button" onclick="window.location.reload()">Uppdatera</button>
+    </div>
     {% if bookings %}
     <div class="table-container">
       <table class="dashboard-table">
@@ -22,15 +25,23 @@
           <th>Status</th>
           <th></th>
         </tr>
-        {% for b in bookings %}
+        {% for booking in bookings %}
         <tr>
-          <td>{{ b[1] }}</td>
-          <td>{{ b[2] }}</td>
-          <td>{{ b[3] }}</td>
-          <td class="status status-{{ b[4] }}">{{ b[4] }}</td>
+          <td>{{ booking.language }}</td>
+          <td>{{ booking.time_start }}</td>
+          <td>{{ booking.time_end }}</td>
+          <td class="status status-{{ booking.status }}">
+            {% if booking.status == 'accepted' %}
+              Accepted by {{ booking.interpreter_name or 'Unknown interpreter' }} – {{ booking.interpreter_phone or 'No phone' }}
+            {% elif booking.status == 'cancelled' %}
+              Cancelled
+            {% else %}
+              Pending
+            {% endif %}
+          </td>
           <td>
-            {% if b[4] == 'pending' %}
-            <form method="post" action="{{ url_for('cancel_booking', booking_id=b[0]) }}">
+            {% if booking.status == 'pending' %}
+            <form method="post" action="{{ url_for('cancel_booking', booking_id=booking.id) }}">
               <button type="submit" class="cancel-button">Avbryt</button>
             </form>
             {% endif %}
