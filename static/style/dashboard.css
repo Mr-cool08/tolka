@@ -77,6 +77,16 @@
     margin-right: 10px;
 }
 
+.dashboard-refresh {
+    margin: 10px 0 20px 0;
+}
+
+.dashboard-refresh .dashboard-button {
+    margin-right: 0;
+    border: none;
+    cursor: pointer;
+}
+
 .dashboard-button:hover {
     background-color: #2980b9;
 }

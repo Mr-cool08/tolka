@@ -65,20 +65,50 @@
 
     <script>
         function acceptJob(jobId) {
-            // Display loading overlay
+            const translatorName = prompt('Ange tolkens namn:');
+            if (translatorName === null) {
+                return;
+            }
+            const trimmedName = translatorName.trim();
+            if (!trimmedName) {
+                alert('Du måste ange ett namn för tolken.');
+                return;
+            }
+
+            const translatorPhone = prompt('Ange tolkens telefonnummer:');
+            if (translatorPhone === null) {
+                return;
+            }
+            const trimmedPhone = translatorPhone.trim();
+            if (!trimmedPhone) {
+                alert('Du måste ange ett telefonnummer.');
+                return;
+            }
+
             document.getElementById('loadingOverlay').style.display = 'flex';
 
-            fetch(`/jobs/${jobId}`, { method: 'POST' })
-                .then(response => {
-                    // Hide loading overlay when the request is complete
+            fetch(`/jobs/${jobId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    translator_name: trimmedName,
+                    translator_phone: trimmedPhone
+                })
+            })
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
                     document.getElementById('loadingOverlay').style.display = 'none';
 
                     if (response.ok) {
-                        alert('Job accepted and mail sent!');
-                        location.reload();  // Refresh the page to update the job list
+                        alert('Uppdrag accepterat!');
+                        location.reload();
                     } else {
-                        alert('Failed to accept the job. Please refresh the page.');
+                        alert(data.error || 'Kunde inte acceptera uppdraget. Försök igen.');
                     }
+                })
+                .catch(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    alert('Ett fel uppstod. Försök igen.');
                 });
         }
     </script>

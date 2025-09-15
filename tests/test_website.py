@@ -4,6 +4,8 @@ import sqlite3
 import pyotp
 import functions
 import website
+from datetime import datetime, timedelta
+import hashlib
 
 
 @pytest.fixture
@@ -63,7 +65,9 @@ def test_user_login_without_2fa_redirects_home(client):
             organization_number TEXT,
             billing_address TEXT,
             email_billing_address TEXT,
-            totp_secret TEXT
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
         )"""
     )
     conn.commit()
@@ -105,7 +109,9 @@ def test_user_login_with_2fa_redirects_two_factor(client):
             organization_number TEXT,
             billing_address TEXT,
             email_billing_address TEXT,
-            totp_secret TEXT
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
         )"""
     )
     conn.commit()
@@ -148,7 +154,9 @@ def test_two_factor_secret_not_shown_on_login(client):
             organization_number TEXT,
             billing_address TEXT,
             email_billing_address TEXT,
-            totp_secret TEXT
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
         )"""
     )
     conn.commit()
@@ -336,6 +344,8 @@ def test_cancel_booking_updates_status(client, tmp_path, monkeypatch):
             marking TEXT,
             avtalskund_marking TEXT,
             reference TEXT,
+            accepted_by_name TEXT,
+            accepted_by_phone TEXT,
             status TEXT NOT NULL DEFAULT 'pending'
         )
         """
@@ -382,6 +392,8 @@ def test_confirmation_post_creates_booking(client, tmp_path, monkeypatch):
             marking TEXT,
             avtalskund_marking TEXT,
             reference TEXT,
+            accepted_by_name TEXT,
+            accepted_by_phone TEXT,
             status TEXT NOT NULL DEFAULT 'pending'
         )
         """
@@ -429,7 +441,9 @@ def test_user_login_invalid_credentials_shows_error(client, tmp_path, monkeypatc
             organization_number TEXT,
             billing_address TEXT,
             email_billing_address TEXT,
-            totp_secret TEXT
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
         )"""
     )
     conn.commit()
@@ -458,7 +472,9 @@ def test_two_factor_valid_token_authenticates_user(client, tmp_path, monkeypatch
             organization_number TEXT,
             billing_address TEXT,
             email_billing_address TEXT,
-            totp_secret TEXT
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
         )"""
     )
     conn.commit()
@@ -534,3 +550,242 @@ def test_two_factor_invalid_token_shows_error(client, tmp_path, monkeypatch):
     with client.session_transaction() as sess:
         assert "user_id" not in sess
         assert sess.get("pending_user_id") == user_id
+
+
+def test_home_shows_accepted_contact_info(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
+        )"""
+    )
+    conn.execute(
+        """CREATE TABLE bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            language TEXT NOT NULL,
+            time_start TEXT NOT NULL,
+            time_end TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            marking TEXT,
+            avtalskund_marking TEXT,
+            reference TEXT,
+            accepted_by_name TEXT,
+            accepted_by_phone TEXT,
+            status TEXT NOT NULL DEFAULT 'pending'
+        )"""
+    )
+    conn.commit()
+
+    email = "user@example.com"
+    pwd_hash, pwd_salt = functions.hash_password("secret")
+    email_hash, email_salt = functions.hash_email(email)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret, reset_token_hash, reset_token_expiry) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '', NULL, NULL)",
+        ("User", email_hash, email_salt, "070", pwd_hash, pwd_salt),
+    )
+    user_id = cursor.lastrowid
+    cursor.execute(
+        "INSERT INTO bookings (name, email, phone, language, time_start, time_end, organization_number, billing_address, email_billing_address, marking, avtalskund_marking, reference, accepted_by_name, accepted_by_phone, status) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '', '', '', ?, ?, 'accepted')",
+        ("User", email, "070", "English", "2024-09-01 10:00", "2024-09-01 11:00", "Tolken", "070-123"),
+    )
+    conn.commit()
+    conn.close()
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = user_id
+        sess["user_email"] = email
+
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Accepted by Tolken – 070-123" in response.get_data(as_text=True)
+
+
+def test_accept_job_updates_booking(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            language TEXT NOT NULL,
+            time_start TEXT NOT NULL,
+            time_end TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            marking TEXT,
+            avtalskund_marking TEXT,
+            reference TEXT,
+            accepted_by_name TEXT,
+            accepted_by_phone TEXT,
+            status TEXT NOT NULL DEFAULT 'pending'
+        )"""
+    )
+    conn.execute(
+        "INSERT INTO bookings (name, email, phone, language, time_start, time_end, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')",
+        ("Customer", "customer@example.com", "070", "English", "2024-09-01 10:00", "2024-09-01 11:00"),
+    )
+    booking_id = conn.execute("SELECT id FROM bookings").fetchone()[0]
+    conn.commit()
+    conn.close()
+
+    sent_messages = []
+
+    def fake_send_email(subject, body, to_addresses, bcc=None):
+        sent_messages.append((subject, body, to_addresses))
+        return True
+
+    monkeypatch.setattr(website, "send_email", fake_send_email)
+
+    with client.session_transaction() as sess:
+        sess["authenticated"] = True
+        sess["tolkar_email"] = "agency@example.com"
+
+    response = client.post(
+        f"/jobs/{booking_id}",
+        json={"translator_name": "Tolken", "translator_phone": "070-123"},
+    )
+    assert response.status_code == 200
+    assert response.is_json
+    assert response.get_json()["message"] == "Job accepted"
+
+    conn = sqlite3.connect("database.db")
+    row = conn.execute(
+        "SELECT status, accepted_by_name, accepted_by_phone FROM bookings WHERE id = ?",
+        (booking_id,),
+    ).fetchone()
+    conn.close()
+    assert row == ("accepted", "Tolken", "070-123")
+    assert len(sent_messages) == 3
+
+
+def test_forgot_password_generates_token(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
+        )"""
+    )
+    conn.commit()
+    email = "reset@example.com"
+    email_hash, email_salt = functions.hash_email(email)
+    conn.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret, reset_token_hash, reset_token_expiry) VALUES (?, ?, ?, ?, '', '', '', '', '', '', NULL, NULL)",
+        ("Reset User", email_hash, email_salt, "070"),
+    )
+    conn.commit()
+    conn.close()
+
+    sent = {}
+
+    def fake_send_email(subject, body, to_addresses, bcc=None):
+        sent["subject"] = subject
+        sent["body"] = body
+        sent["to"] = to_addresses
+        return True
+
+    monkeypatch.setattr(website, "send_email", fake_send_email)
+
+    response = client.post("/forgot_password", data={"email": email})
+    assert response.status_code == 200
+    assert "återställningslänk" in response.get_data(as_text=True)
+
+    conn = sqlite3.connect("database.db")
+    row = conn.execute(
+        "SELECT reset_token_hash, reset_token_expiry FROM logins WHERE email = ?",
+        (email_hash,),
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    token_hash, token_expiry = row
+    assert token_hash is not None
+    assert token_expiry is not None
+    assert sent["to"] == email
+
+
+def test_reset_password_updates_password(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    conn = sqlite3.connect("database.db")
+    conn.execute(
+        """CREATE TABLE logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            email_salt TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            organization_number TEXT,
+            billing_address TEXT,
+            email_billing_address TEXT,
+            totp_secret TEXT,
+            reset_token_hash TEXT,
+            reset_token_expiry TEXT
+        )"""
+    )
+    conn.commit()
+    email = "reset2@example.com"
+    password_hash, password_salt = functions.hash_password("oldpass")
+    email_hash, email_salt = functions.hash_email(email)
+    token = "token123"
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    expiry = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+    conn.execute(
+        "INSERT INTO logins (name, email, email_salt, phone, password_hash, salt, organization_number, billing_address, email_billing_address, totp_secret, reset_token_hash, reset_token_expiry) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '', ?, ?)",
+        ("Reset", email_hash, email_salt, "070", password_hash, password_salt, token_hash, expiry),
+    )
+    conn.commit()
+    conn.close()
+
+    response = client.post(
+        f"/reset_password/{token}",
+        data={"password": "newpass", "confirm_password": "newpass"},
+    )
+    assert response.status_code == 200
+    assert "Ditt lösenord har uppdaterats" in response.get_data(as_text=True)
+
+    conn = sqlite3.connect("database.db")
+    row = conn.execute(
+        "SELECT password_hash, salt, reset_token_hash, reset_token_expiry FROM logins WHERE email = ?",
+        (email_hash,),
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    new_hash, new_salt, stored_token, stored_expiry = row
+    assert stored_token is None
+    assert stored_expiry is None
+    assert functions.verify_password("newpass", new_hash, new_salt)
