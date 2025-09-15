@@ -24,6 +24,12 @@
     background-color: #fafafa;
 }
 
+.dashboard-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
 .dashboard-table th,
 .dashboard-table td {
     border: 1px solid #ddd;
@@ -77,6 +83,14 @@
     margin-right: 10px;
 }
 
+.dashboard-button.secondary {
+    background-color: #7f8c8d;
+}
+
+.dashboard-button.secondary:hover {
+    background-color: #707b7c;
+}
+
 .dashboard-button:hover {
     background-color: #2980b9;
 }
@@ -93,6 +107,17 @@
 .status-accepted {
     color: #27ae60;
     font-weight: bold;
+}
+
+.status-cancelled {
+    color: #c0392b;
+    font-weight: bold;
+}
+
+.dashboard-info {
+    margin: 10px 0 0;
+    font-size: 0.95rem;
+    color: #555;
 }
 
 @media (max-width: 600px) {

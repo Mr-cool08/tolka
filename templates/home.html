@@ -12,7 +12,11 @@
   <img src="{{ url_for('static', filename='images/20250816_2214_Tolk och klient_simple_compose_01k2t86s2me5f9xgbccfde7gcg.png') }}" alt="Tolkar" class="home-hero">
   <div class="dashboard-container">
     <h1>Dina bokningar</h1>
+    <div class="dashboard-toolbar">
+      <button type="button" class="dashboard-button secondary" onclick="window.location.reload()">Uppdatera</button>
+    </div>
     {% if bookings %}
+    {% set ns = namespace(has_accepted=False) %}
     <div class="table-container">
       <table class="dashboard-table">
         <tr>
@@ -27,7 +31,16 @@
           <td>{{ b[1] }}</td>
           <td>{{ b[2] }}</td>
           <td>{{ b[3] }}</td>
-          <td class="status status-{{ b[4] }}">{{ b[4] }}</td>
+          <td class="status status-{{ b[4] }}">
+            {% if b[4] == 'accepted' %}
+              {% set ns.has_accepted = True %}
+              Accepted by {{ b[5] or 'okänd tolk' }} – {{ b[6] or 'okänt nummer' }}
+            {% elif b[4] == 'cancelled' %}
+              Avbruten
+            {% else %}
+              {{ b[4] }}
+            {% endif %}
+          </td>
           <td>
             {% if b[4] == 'pending' %}
             <form method="post" action="{{ url_for('cancel_booking', booking_id=b[0]) }}">
@@ -39,6 +52,9 @@
         {% endfor %}
       </table>
     </div>
+    {% if ns.has_accepted %}
+    <p class="dashboard-info">För avbokning av accepterade uppdrag, kontakta tolken minst 24 timmar i förväg.</p>
+    {% endif %}
     {% else %}
     <p>Du har inga bokningar.</p>
     {% endif %}
